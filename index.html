@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Feldcheck</title>
+<meta name="description" content="Inspektionen, Probleme und Aktionen im Feld erfassen, auch offline.">
+<meta name="theme-color" content="#0e3a46">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Feldcheck">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE work: a field tool that looks like a shipped product
+   IDEA a rugged inspection app on a technician's phone, hi-vis signal orange on petrol
+   PICTURE the working app itself, framed as a phone, opening mid-use with real sample data
+   COLOUR petrol ground #0e3a46, white/graphite app surfaces, signal orange #ff5b14, flag red, ok green
+   TYPE Inter Tight 700 for titles + Inter for text
+   LAYOUT laptop: phone centred with a quiet scope column left; phone: the app fills the screen */
+:root{color-scheme:light dark;--ground:#0e3a46;--bg:light-dark(#f3f4f2,#0f1214);--card:light-dark(#ffffff,#1a1f22);--ink:light-dark(#14191c,#eef1f2);--mut:light-dark(#5b6670,#9aa6ad);--line:light-dark(#e1e4e6,#2a3135);--acc:#ff5b14;--acc2:light-dark(#0e5566,#5fb6c8);--red:#d92d20;--ok:#1f8f4e;--warn:#c98a00;--soft:light-dark(#fff1ea,#33221a)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%;margin:0}
+body{background:var(--ground);color:var(--ink);font:16px/1.45 Inter,system-ui,-apple-system,sans-serif;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{height:100%;display:grid;grid-template-columns:minmax(0,1fr);place-items:center}
+.side{display:none}
+@media(min-width:900px){.wrap{grid-template-columns:minmax(0,340px) 430px;gap:56px;justify-content:center}.side{display:block;color:#e6f1f3}}
+.side h1{font:700 40px/1.05 "Inter Tight",Inter,sans-serif;letter-spacing:-.02em;margin:0 0 12px;text-wrap:balance}
+.side p{color:#b8d3d9;margin:0 0 18px}
+.side ul{padding:0;margin:0 0 20px;list-style:none}
+.side li{padding:9px 0;border-top:1px solid #ffffff22;font-size:15px}
+.side li b{color:#fff}
+.side small{color:#8fb3bb;font-size:13px}
+.phone{position:relative;width:100%;height:100%;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+@media(min-width:600px){.phone{width:430px;height:min(100% - 40px,900px);border-radius:34px;box-shadow:0 0 0 10px #0a2a33,0 30px 60px #0006}}
+.status{display:flex;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top,0px)) 22px 4px;font-size:13px;font-weight:600}
+.hd{display:flex;align-items:center;gap:10px;padding:6px 16px 10px;min-height:52px}
+.hd h2{font:700 24px/1.1 "Inter Tight",Inter,sans-serif;letter-spacing:-.02em;margin:0;flex:1}
+.hd .t{font:600 17px/1.2 Inter,sans-serif;flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ib{width:44px;height:44px;border:0;border-radius:12px;background:transparent;display:grid;place-items:center;cursor:pointer;flex:none}
+.ib:hover{background:var(--line)}
+.ib svg{width:22px;height:22px}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--acc);display:grid;place-items:center;color:#fff;font:700 15px "Inter Tight",sans-serif;flex:none}
+.scr{flex:1;overflow-y:auto;padding:0 16px 110px;-webkit-overflow-scrolling:touch}
+.tabs{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:var(--card);border:1px solid var(--line);border-radius:22px;padding:6px;box-shadow:0 6px 20px #0002}
+.tab{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--mut);padding:6px 0;border-radius:14px;cursor:pointer;min-height:48px}
+.tab svg{width:22px;height:22px}
+.tab.on{color:var(--acc);background:var(--soft)}
+.fab{position:absolute;right:20px;bottom:calc(96px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;border:0;background:var(--acc);color:#fff;font-size:30px;line-height:1;box-shadow:0 8px 18px #ff5b1455;cursor:pointer}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.row:hover{border-color:var(--acc)}
+.row .ico{width:40px;height:40px;border-radius:12px;background:var(--bg);display:grid;place-items:center;flex:none;color:var(--acc2)}
+.row .ico svg{width:20px;height:20px}
+.row .m{flex:1;min-width:0}
+.row b{display:block;font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row small,.sub{display:block;color:var(--mut);font-size:13px}
+.kick{font-size:12px;font-weight:600;color:var(--mut);margin:18px 2px 8px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap;background:var(--bg);color:var(--mut)}
+.p-prog{background:#fff3d6;color:#7a5200}.p-done{background:#dcf3e5;color:#11683a}.p-open{background:#ffe1dc;color:#9b1c12}.p-hi{background:#ffe1dc;color:#9b1c12}.p-mid{background:#fff3d6;color:#7a5200}
+:root[data-theme=dark] .p-prog,:root[data-theme=dark] .p-mid{background:#3a2f12;color:#f4c95d}:root[data-theme=dark] .p-done{background:#12321f;color:#6fd69b}:root[data-theme=dark] .p-open,:root[data-theme=dark] .p-hi{background:#3b1714;color:#ff9a8f}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .p-prog,:root:not([data-theme=light]) .p-mid{background:#3a2f12;color:#f4c95d}:root:not([data-theme=light]) .p-done{background:#12321f;color:#6fd69b}:root:not([data-theme=light]) .p-open,:root:not([data-theme=light]) .p-hi{background:#3b1714;color:#ff9a8f}}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);background:var(--line);border-radius:12px;padding:3px;margin-bottom:12px}
+.seg button{border:0;background:none;padding:9px 6px;border-radius:9px;font-size:14px;font-weight:600;color:var(--mut);cursor:pointer}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px #0002}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.chip.on{border-color:var(--acc);color:var(--acc)}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:4px 0 6px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:left;cursor:pointer}
+.kpi b{display:block;font:700 30px/1 "Inter Tight",sans-serif}
+.kpi span{font-size:12px;color:var(--mut);font-weight:600}
+.kpi.alert b{color:var(--red)}
+.btn{display:block;width:100%;border:0;border-radius:14px;background:var(--acc);color:#fff;font-weight:600;padding:14px;cursor:pointer;min-height:48px;text-align:center}
+.btn.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn.ghost{background:none;color:var(--acc);border:0}
+.btn.dark{background:var(--acc2);color:#fff}
+.btn:disabled{opacity:.45;cursor:default}
+.bar{display:flex;gap:8px;position:absolute;left:0;right:0;bottom:0;padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,var(--bg) 30%)}
+.bar .btn{flex:1}
+label.f{display:block;margin-bottom:14px}
+label.f>span{display:block;font-size:13px;font-weight:600;color:var(--mut);margin-bottom:6px}
+.in{width:100%;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px;font-size:16px;min-height:46px}
+.in:focus,.btn:focus-visible,.row:focus-visible,.ib:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+textarea.in{min-height:96px;resize:vertical}
+.q{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+.q.miss{border-color:var(--red);box-shadow:0 0 0 2px #d92d2033}
+.q h4{margin:0 0 10px;font-size:15px;font-weight:600}
+.req{color:var(--red)}
+.yn{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.yn button{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:11px 4px;font-weight:600;cursor:pointer;min-height:44px}
+.yn .on.y{background:var(--ok);border-color:var(--ok);color:#fff}
+.yn .on.n{background:var(--red);border-color:var(--red);color:#fff}
+.yn .on.na{background:var(--mut);border-color:var(--mut);color:#fff}
+.qa{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap}
+.qa button{border:0;background:none;color:var(--acc2);font-size:13px;font-weight:600;padding:8px 8px;border-radius:8px;cursor:pointer;display:flex;gap:5px;align-items:center}
+.qa button:hover{background:var(--bg)}
+.qa svg{width:16px;height:16px}
+.note{margin-top:8px;font-size:14px;background:var(--bg);border-radius:10px;padding:8px 10px}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.thumbs img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.prog{height:4px;background:var(--line);border-radius:4px;margin:0 16px 10px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--acc);transition:width .3s}
+.meta{display:grid;grid-template-columns:8.5em minmax(0,1fr);gap:8px 12px;font-size:14px}
+.meta dt{color:var(--mut)}.meta dd{margin:0}
+.big{font:700 34px/1.05 "Inter Tight",sans-serif;letter-spacing:-.02em;margin:6px 0}
+.empty{text-align:center;padding:40px 16px;color:var(--mut)}
+.empty svg{width:72px;height:72px;color:var(--acc);opacity:.85}
+.empty b{display:block;color:var(--ink);font-size:18px;margin:8px 0 4px}
+.ov{position:absolute;inset:0;background:#0007;display:flex;align-items:flex-end;z-index:5}
+.ov.c{align-items:center;justify-content:center;padding:20px}
+.sheet{background:var(--card);width:100%;border-radius:22px 22px 0 0;padding:10px 16px calc(20px + env(safe-area-inset-bottom,0px));max-height:85%;overflow:auto}
+.sheet:before{content:"";display:block;width:40px;height:5px;border-radius:5px;background:var(--line);margin:0 auto 12px}
+.sheet h3,.dlg h3{margin:0 0 12px;font-size:18px}
+.dlg{background:var(--card);border-radius:20px;padding:20px;width:100%;max-width:340px}
+.dlg p{color:var(--mut);margin:0 0 16px;font-size:14px}
+.dlg .btn{margin-bottom:8px}
+.toast{position:absolute;left:50%;top:70px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;z-index:9;white-space:nowrap;animation:tin .25s ease-out}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}}
+@media(prefers-reduced-motion:reduce){.toast{animation:none}.prog i{transition:none}}
+.sig{width:100%;height:140px;background:#fff;border:1px dashed var(--mut);border-radius:12px;touch-action:none;display:block}
+.ai{display:flex;gap:10px;align-items:center;background:var(--soft);border-radius:14px;padding:12px;font-size:14px;margin-bottom:14px}
+.ai svg{width:22px;height:22px;color:var(--acc);flex:none}
+.spin{width:44px;height:44px;border:4px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:sp 1s linear infinite;margin:60px auto 14px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.rep{background:#fff;color:#111;border-radius:12px;padding:18px;font-size:14px;border:1px solid var(--line)}
+.rep h3{font:700 22px/1.1 "Inter Tight",sans-serif;margin:0 0 4px}
+.rep table{width:100%;border-collapse:collapse;margin:8px 0 14px}
+.rep td{border-top:1px solid #e5e5e5;padding:7px 4px;vertical-align:top}
+.rep td:last-child{text-align:right;font-weight:600;white-space:nowrap}
+.rep .sec{background:#0e3a46;color:#fff;padding:6px 8px;border-radius:6px;font-weight:600;margin-top:12px}
+.rep .fl{color:#d92d20}
+.rep img{max-width:100%}
+.tabsx{display:flex;gap:4px;overflow-x:auto;margin-bottom:12px;border-bottom:1px solid var(--line)}
+.tabsx button{border:0;background:none;padding:10px 10px;font-weight:600;font-size:14px;color:var(--mut);border-bottom:2px solid transparent;cursor:pointer;flex:none}
+.tabsx button.on{color:var(--acc);border-color:var(--acc)}
+.act{font-size:14px;padding:10px 0;border-bottom:1px solid var(--line)}
+.act small{color:var(--mut);display:block;font-size:12px}
+.local{font-size:12px;color:var(--mut);text-align:center;margin:18px 0 0}
+@media(display-mode:standalone){.status{display:none}.hd{padding-top:calc(8px + env(safe-area-inset-top,0px))}.phone{width:100%;height:100%;border-radius:0;box-shadow:none}.wrap{grid-template-columns:minmax(0,1fr)}.side{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="side">
+    <h1>Feldcheck: Prototyp einer Inspektions-App</h1>
+    <p>Prototyp mit den Kernfunktionen einer Inspektions-App. Als PWA installierbar und offline nutzbar.</p>
+    <ul>
+      <li><b>Inspektionen</b> aus Vorlagen mit Seiten, Ja/Nein/N.A., Notiz, Foto, Folgeaktion, Live-Bewertung, Unterschrift, Bericht</li>
+      <li><b>Probleme</b> per Freitext und Foto, simulierte KI-Vorausfüllung</li>
+      <li><b>Aktionen</b> mit Typen (PSA-Bestellung, SAP-Meldung) und Zusatzfeldern</li>
+      <li><b>Sites und Assets</b> mit offenen Punkten je Anlage</li>
+    </ul>
+    <small>Beispieldaten sind zufällig erzeugt und erfunden. Unter Mehr lassen sie sich neu auswürfeln. Daten bleiben nur in diesem Browser.</small>
+  </div>
+  <div class="phone" id="app"></div>
+</div>
+<input type="file" id="file" accept="image/*" multiple hidden>
+<script>
+{
+const ICON={
+home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+clip:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM8.5 12h7M8.5 16h5"/>',
+alert:'<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/>',
+check:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/>',
+grid:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',
+back:'<path d="M15 5l-7 7 7 7"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',
+note:'<path d="M5 19l1-4L16 5l3 3L9 18z"/>',cam:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+act:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/>',
+asset:'<path d="M4 20V9l8-5 8 5v11z"/><path d="M9 20v-6h6v6"/>',pin:'<path d="M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+spark:'<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>',bell:'<path d="M6 17V11a6 6 0 0 1 12 0v6l2 2H4z"/><path d="M10 21h4"/>',
+doc:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>',search:'<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
+sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',wind:'<path d="M12 12V21M12 12l-1-8M12 12l7 4M12 12l-7 4"/>'};
+const ic=(n)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[n]||''}</svg>`;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DAY=864e5,now=()=>Date.now();
+const fd=t=>t?new Date(t).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}):'–';
+const fdt=t=>t?new Date(t).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'–';
+const toLocal=t=>{const d=new Date(t);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
+const ago=t=>{const d=Math.round((now()-t)/DAY);return d<=0?'heute':d===1?'gestern':`vor ${d} Tagen`};
+const USER='Gregor Biering';
+
+const titlePage=()=>({title:'Titelseite',items:[{id:'site',t:'site',l:'Standort (Site)',req:1},{id:'asset',t:'asset',l:'Anlage (Asset)'},{id:'date',t:'datetime',l:'Durchgeführt am',req:1},{id:'prep',t:'text',l:'Erstellt von',req:1},{id:'loc',t:'text',l:'Ort / Adresse'}]});
+const closePage=()=>({title:'Abschluss',items:[{id:'rem',t:'textarea',l:'Bemerkungen'},{id:'sig',t:'sig',l:'Unterschrift Prüfer',req:1}]});
+const yn=(id,l,req=1)=>({id,t:'yn',l,req});
+const TPL=[
+{id:'T1',name:'PV-Anlage Sichtprüfung',icon:'sun',pages:[titlePage(),{title:'Module & Unterkonstruktion',items:[yn('m1','Module ohne sichtbare Beschädigung (Glasbruch, Verfärbung)?'),yn('m2','Unterkonstruktion fest, keine Korrosion?'),yn('m3','Keine Verschattung durch Bewuchs?')]},{title:'Elektrik',items:[yn('e1','Strangkabel fixiert, keine Scheuerstellen?'),yn('e2','Wechselrichter ohne Fehlermeldung?'),yn('e3','Kennzeichnung und Warnhinweise vorhanden?'),{id:'e4',t:'number',l:'Isolationswiderstand (MΩ)'},{id:'e5',t:'photo',l:'Foto Wechselrichter-Display'}]},closePage()]},
+{id:'T2',name:'Trafostation Begehung',icon:'asset',pages:[titlePage(),{title:'Zugang & Gebäude',items:[yn('z1','Tür verschlossen, Schloss unbeschädigt?'),yn('z2','Warnschilder (Hochspannung) vollständig?'),yn('z3','Feuerlöscher vorhanden und geprüft?')]},{title:'Technik',items:[yn('k1','Ölstand Transformator im Sollbereich?'),yn('k2','Keine auffälligen Geräusche oder Gerüche?'),{id:'k3',t:'number',l:'Temperaturanzeige (°C)'}]},closePage()]},
+{id:'T3',name:'Sicherheitsrundgang Baustelle',icon:'check',pages:[titlePage(),{title:'Arbeitsplatz',items:[yn('s1','PSA wird von allen Personen getragen?'),yn('s2','Verkehrs- und Fluchtwege frei?'),yn('s3','Erste-Hilfe-Material vollständig?'),yn('s4','Absturzsicherungen vorhanden?',0)]},closePage()]}];
+const tpl=id=>TPL.find(t=>t.id===id);
+const allItems=t=>t.pages.flatMap(p=>p.items);
+
+function seed(){
+ const t=now(),R=Math.random,ri=(a,b)=>a+Math.floor(R()*(b-a+1)),pick=a=>a[Math.floor(R()*a.length)],ch=p=>R()<p;
+ const wpick=o=>{let r=R()*Object.values(o).reduce((a,b)=>a+b,0);for(const k in o){r-=o[k];if(r<=0)return k}return Object.keys(o)[0]};
+ const PEOPLE=[USER,USER,'Lennart Peters','Priyanka Joshi','Farouk Elguefrei','Lucia Perez','Thibault Cazaurang','Birte Schulz','Emmanuel Mompremier','Jana Wolters','Mehmet Aydın'];
+ const SITES=[['Solarpark Schönau A','Feldweg 4, 79677 Schönau','PV','SCH01PV'],['Solarpark Heidesee','Am Heidesee 2, 15754 Heidesee','PV','HDS02PV'],['Windpark Nordfeld','Am Deich 12, 25899 Niebüll','WP','NF01WP'],['Windpark Hohe Geest','Geestweg 7, 27412 Tarmstedt','WP','HG03WP'],['Umspannwerk Ost','Industriestraße 30, 45478 Mülheim','UW','OST01UW'],['Batteriespeicher Lippetal','Hellweg 88, 59510 Lippetal','BESS','LIP01BS']];
+ const sites=[],assets=[];let an=1;
+ const add=(s,type,name,tid)=>assets.push({id:'A'+(an++),type,name,tid,site:s,st:wpick({'In Betrieb':80,'Wartung':10,'Störung':7,'Außer Betrieb':3})});
+ SITES.slice().sort(()=>R()-.5).slice(0,ri(4,6)).forEach(([name,addr,k,code],n)=>{
+  const id='S'+(n+1);sites.push({id,name,addr});const pre='DE_'+code.slice(0,3)+'.'+code;
+  if(k==='PV'){add(id,'Trafostation','Transformer Station 01',pre+'.G01');for(let g=1;g<=ri(1,2);g++)add(id,'Wechselrichter','WR-Station '+g,pre+'.G0'+g+'.WR');for(let i=1,m=ri(4,9);i<=m;i++)add(id,'PV-Array','PV Array 1.'+i,pre+'.G01.MQA'+String(i).padStart(2,'0'))}
+  if(k==='WP'){for(let i=1,m=ri(3,8);i<=m;i++)add(id,'WEA','WEA '+String(i).padStart(2,'0'),pre+'.WEA'+String(i).padStart(2,'0'));add(id,'Trafostation','Übergabestation',pre+'.UEB')}
+  if(k==='UW'){for(let i=1,m=ri(2,4);i<=m;i++)add(id,'Trafostation','Trafo T'+i,pre+'.T0'+i);add(id,'Schaltanlage','110-kV-Schaltfeld',pre+'.SF110')}
+  if(k==='BESS'){for(let i=1,m=ri(4,8);i<=m;i++)add(id,'Batteriecontainer','Container '+String(i).padStart(2,'0'),pre+'.BC'+String(i).padStart(2,'0'));add(id,'Trafostation','MS-Trafo',pre+'.T01')}
+ });
+ const NOTES={m1:['Glasbruch an Modul {n}, Reihe {r}.','Verfärbung (Snail Trails) an {n} Modulen.','Modulrahmen verbogen nach Sturm.'],m2:['Korrosion an Rammprofil Reihe {r}.','Klemme an Tisch {n} locker.'],m3:['Bewuchs verschattet untere Modulreihe.','Gras höher als 40 cm.'],e1:['Strangkabel scheuert an Kante, Tisch {n}.','Kabelbinder gerissen, Kabel hängt durch.'],e2:['Wechselrichter meldet Isolationsfehler.','Display zeigt Fehler {n}.'],e3:['Warnaufkleber am GAK fehlt.','Beschriftung Strang {n} unleserlich.'],z1:['Schloss schwergängig.','Tür nicht verschlossen vorgefunden.'],z2:['Schild an Nordtür verblasst.','Hochspannungsschild fehlt.'],z3:['Prüfplakette Feuerlöscher abgelaufen.','Feuerlöscher fehlt.'],k1:['Ölstand unter Minimum.','Ölspuren an Wanne.'],k2:['Brummen lauter als üblich.','Leichter Brandgeruch.'],s1:['{n} Personen ohne Schutzhelm.','Warnweste fehlt bei Fremdfirma.'],s2:['Fluchtweg durch Material blockiert.','Verkehrsweg nicht gekennzeichnet.'],s3:['Verbandkasten abgelaufen.','Augenspülflasche fehlt.'],s4:['Absturzsicherung an Kante fehlt.']};
+ const fill=s=>s.replace('{n}',ri(2,24)).replace('{r}',pick('ABCDEF'));
+ const tplFor=s=>{const ty=new Set(assets.filter(a=>a.site===s).map(a=>a.type));const o=['T3','T3'];if(ty.has('PV-Array'))o.push('T1','T1','T1');if(ty.has('Trafostation'))o.push('T2','T2');return pick(o)};
+ const assetFor=(tid,s)=>{const L=assets.filter(a=>a.site===s&&(tid==='T1'?a.type==='PV-Array':tid==='T2'?a.type==='Trafostation':true));return tid==='T3'&&ch(.5)?'':(pick(L)?.id||'')};
+ const ins=[];let iN=1;
+ for(let k=0,m=ri(18,30);k<m;k++){
+  const s=pick(sites).id,tid=tplFor(s),T=tpl(tid),done=ch(.78),st0=t-(done?ri(0,120):ri(0,14))*DAY-ri(0,600)*6e4,by=pick(PEOPLE),d=ri(40,1500)*1e3;
+  const ans={site:{v:s},asset:{v:assetFor(tid,s)},date:{v:toLocal(st0)},prep:{v:by},loc:{v:sites.find(x=>x.id===s).addr}};
+  const cut=done?99:ri(1,T.pages.length-1);
+  T.pages.forEach((p,pi)=>{if(pi===0||pi>cut)return;for(const it of p.items){
+   if(it.t==='yn'){const v=wpick({y:78,n:14,na:8});ans[it.id]={v};if(v==='n'&&NOTES[it.id]&&ch(.85))ans[it.id].note=fill(pick(NOTES[it.id]))}
+   else if(it.id==='e4')ans[it.id]={v:String(ri(2,120))};else if(it.id==='k3')ans[it.id]={v:String(ri(28,78))};
+   else if(it.id==='rem'&&ch(.4))ans[it.id]={v:pick(['Keine weiteren Auffälligkeiten.','Nachkontrolle in 4 Wochen empfohlen.','Zugang wegen Schnee nur eingeschränkt.','Fremdfirma vor Ort, Arbeiten laufen.','Wetter: Regen, Sicht gut.'])};
+   else if(it.t==='sig')ans[it.id]={v:''};}});
+  ins.push({id:'I'+(iN++),tpl:tid,st:done?'done':'prog',by,start:st0,upd:st0+d,done:done?st0+d:undefined,ans});
+ }
+ ins.sort((a,b)=>a.start-b.start);
+ const ISS=[['Vorfall','Fahrzeug bei Schnee in Graben gerutscht','Hoch'],['Vorfall','Mitarbeiter auf nasser Leiter ausgerutscht','Hoch'],['Beinaheunfall','Werkzeug von Gondel gefallen, niemand getroffen','Hoch'],['Beinaheunfall','Fremdfahrzeug fährt ohne Einweisung aufs Gelände','Mittel'],['Gefährdung','Zaun an Südseite beschädigt, Zugang offen','Mittel'],['Gefährdung','Kabelgraben nicht abgesichert','Hoch'],['Gefährdung','Eisansatz an Rotorblättern','Hoch'],['Umwelt','Ölspuren unter Trafowanne','Mittel'],['Umwelt','Hydraulikleck an Kran','Mittel'],['Technischer Mangel','Kommunikationsausfall SCADA-Router','Mittel'],['Technischer Mangel','Lüfter Batteriecontainer defekt','Hoch'],['Technischer Mangel','Kamera am Tor ohne Bild','Niedrig'],['Feedback','Parkplatz bei Regen schlecht befahrbar','Niedrig'],['Feedback','Schlüsselkasten schwer erreichbar','Niedrig']];
+ const issues=[];let isN=1;
+ const mkIss=(cat,title,prio,s,a,at,insId,desc)=>{const st=wpick({'Offen':40,'In Bearbeitung':25,'Gelöst':35}),by=pick(PEOPLE),log=[{t:at,w:by,x:'Problem erstellt'}];if(st!=='Offen')log.push({t:at+ri(1,10)*DAY,w:pick(PEOPLE),x:'Status: '+st});if(ch(.4))log.push({t:at+ri(1,5)*DAY,w:pick(PEOPLE),x:'Kommentar: '+pick(['Ersatzteil ist bestellt.','Fremdfirma informiert.','Vor Ort geprüft, Foto folgt.','Bitte bis Freitag klären.'])});const id='IS-'+(isN++);issues.push({id,cat,title,desc:desc||'',st,prio,site:s,asset:a,at,media:[],by,ins:insId,log});return id};
+ for(const i of ins)for(const it of allItems(tpl(i.tpl)))if(i.ans[it.id]?.v==='n'&&ch(.3))mkIss(i.tpl==='T3'?'Gefährdung':'Technischer Mangel',(i.ans[it.id].note||it.l).replace(/\.$/,''),pick(['Mittel','Hoch']),i.ans.site.v,i.ans.asset.v,i.start+6e5,i.id,'Aus Inspektion '+i.id+'.');
+ for(let k=0,m=ri(5,10);k<m;k++){const [c,ti,p]=pick(ISS),s=pick(sites).id,a=ch(.6)?(pick(assets.filter(x=>x.site===s))?.id||''):'';mkIss(c,ti,p,s,a,t-ri(0,200)*DAY,'',pick(['Beim Rundgang festgestellt.','Von Fremdfirma gemeldet.','Siehe Fotos in der Akte.','']))}
+ issues.sort((a,b)=>a.at-b.at);
+ const ACT=[['Aktion','Zaun reparieren',{}],['Aktion','Bewuchs mähen lassen',{}],['Aktion','Warnschild erneuern',{}],['Aktion','Fluchtweg freiräumen',{}],['Aktion','Unterweisung Fremdfirma wiederholen',{}],['Aktion','Feuerlöscher prüfen lassen',{}],['PSA-Bestellung','Schutzhandschuhe Klasse 0',{size:()=>pick(['M','L','XL']),qty:()=>String(ri(2,20))}],['PSA-Bestellung','Auffanggurt mit Falldämpfer',{size:()=>pick(['M/L','L/XL']),qty:()=>String(ri(1,4))}],['PSA-Bestellung','Warnwesten Klasse 2',{size:()=>pick(['L','XL','XXL']),qty:()=>String(ri(5,30))}],['PSA-Bestellung','Störlichtbogen-Gesichtsschutz',{size:()=>'Universal',qty:()=>String(ri(1,6))}],['SAP-Meldung','Modul tauschen',{art:()=>'M2 Störmeldung'}],['SAP-Meldung','Wechselrichter-Service beauftragen',{art:()=>'M1 Instandhaltung'}],['SAP-Meldung','Ölstand Trafo nachfüllen',{art:()=>'M2 Störmeldung'}],['SAP-Meldung','Lüfter Batteriecontainer tauschen',{art:()=>'M2 Störmeldung'}]];
+ const actions=[];let aN=101;
+ const mkAct=(type,title,cfg,s,a,src)=>{const due=t+ri(-25,35)*DAY,past=due<t,st=wpick(past?{'Offen':35,'In Bearbeitung':20,'Erledigt':45}:{'Offen':55,'In Bearbeitung':30,'Erledigt':15}),cf={};for(const k in cfg)cf[k]=cfg[k]();if(type==='SAP-Meldung')cf.eq=asset(a)?.tid||'';actions.push({id:'AC-'+(aN++),type,title,desc:'',prio:wpick({'Niedrig':30,'Mittel':45,'Hoch':25}),due:toLocal(due).slice(0,10),who:ch(.45)?USER:pick(PEOPLE),site:s,asset:a,st,cf,src})};
+ const asset=id=>assets.find(x=>x.id===id);
+ for(const x of issues)if(x.cat!=='Feedback'&&ch(.6))mkAct(ch(.5)?'SAP-Meldung':'Aktion',(x.asset?'Mangel beheben: ':'Klären: ')+x.title,x.asset?{art:()=>'M2 Störmeldung'}:{},x.site,x.asset,x.id);
+ for(let k=0,m=ri(10,18);k<m;k++){const [ty,ti,cfg]=pick(ACT),s=pick(sites).id,a=ch(.5)?(pick(assets.filter(x=>x.site===s))?.id||''):'';mkAct(ty,ti+(a?' ('+asset(a).name+')':''),cfg,s,a,'')}
+ return {v:2,sites,assets,ins,issues,actions,n:{I:iN,IS:isN,AC:aN}};
+}
+let S;
+try{S=JSON.parse(localStorage.getItem('feldcheck.v1'))}catch(e){}
+if(!S||S.v!==2)S=seed();
+let warned=false;
+const save=()=>{try{localStorage.setItem('feldcheck.v1',JSON.stringify(S))}catch(e){if(!warned){warned=true;toast('Speicher voll: Fotos nur bis Neuladen')}}};
+
+const U={tab:'start',stack:[],sheet:null,dlg:null,iseg:'list',ist:'all',site:'',aseg:'mine',isf:'open',page:0,miss:[],draft:null,idraft:null,itab:'ov',atab:'open',q:''};
+const site=id=>S.sites.find(s=>s.id===id);
+const asset=id=>S.assets.find(a=>a.id===id);
+const sname=id=>site(id)?.name||'–';
+const aname=id=>asset(id)?.name||'';
+const top=()=>U.stack[U.stack.length-1];
+const push=(v,id)=>{U.stack.push({v,id});if(v==='conduct'){U.page=0;U.miss=[]}render(true)};
+const pop=()=>{U.stack.pop();render(true)};
+const overdue=a=>a.st!=='Erledigt'&&a.due&&new Date(a.due+'T23:59')<new Date();
+const stPill=s=>{const c={prog:'p-prog',done:'p-done','Offen':'p-open','In Bearbeitung':'p-prog','Gelöst':'p-done','Erledigt':'p-done'}[s]||'';const l={prog:'Im Gange',done:'Abgeschlossen'}[s]||s;return `<span class="pill ${c}">${esc(l)}</span>`};
+const prPill=p=>`<span class="pill ${p==='Hoch'?'p-hi':p==='Mittel'?'p-mid':''}">${esc(p)}</span>`;
+
+function score(i){const t=tpl(i.tpl);let y=0,n=0,fl=0;for(const it of allItems(t))if(it.t==='yn'){const v=i.ans[it.id]?.v;if(v==='y')y++;if(v==='n'){n++;fl++}}return {y,tot:y+n,fl,pct:y+n?Math.round(y/(y+n)*1000)/10:0}}
+const insTitle=i=>`${fd(i.ans.date?.v||i.start)} / ${i.ans.prep?.v||i.by}`;
+const missing=i=>allItems(tpl(i.tpl)).filter(it=>it.req&&!(i.ans[it.id]?.v));
+
+/* ---------- header + tab views ---------- */
+const hdMain=t=>`<div class="hd"><div class="logo">FC</div><h2>${t}</h2><button class="ib" data-a="toast" data-x="Keine neuen Benachrichtigungen" aria-label="Benachrichtigungen">${ic('bell')}</button></div>`;
+const hdSub=(t,right='')=>`<div class="hd"><button class="ib" data-a="back" aria-label="Zurück">${ic('back')}</button><div class="t">${esc(t)}</div>${right||'<span class="ib"></span>'}</div>`;
+
+function vStart(){
+ const mine=S.actions.filter(a=>a.who===USER&&a.st!=='Erledigt');
+ const od=mine.filter(overdue);
+ const prog=S.ins.filter(i=>i.st==='prog'&&i.by===USER);
+ const due=mine.slice().sort((a,b)=>a.due.localeCompare(b.due));
+ let h=hdMain('Agenda')+`<div class="scr"><div class="kpis">
+ <button class="kpi" data-a="goAct" data-x="mine"><b>${mine.length}</b><span>Meine Aktionen</span></button>
+ <button class="kpi ${od.length?'alert':''}" data-a="goAct" data-x="over"><b>${od.length}</b><span>Überfällig</span></button>
+ <button class="kpi" data-a="goIns"><b>${prog.length}</b><span>Meine im Gange</span></button></div>`;
+ if(!due.length&&!prog.length)h+=`<div class="empty">${ic('check')}<b>Alles erledigt!</b>Die Ihnen zugewiesenen Elemente werden hier angezeigt.</div>`;
+ if(prog.length)h+=`<div class="kick">Inspektionen fortsetzen</div>`+prog.map(rowIns).join('');
+ if(due.length)h+=`<div class="kick">Meine offenen Aktionen</div>`+due.map(rowAct).join('');
+ return h+`</div>`;
+}
+function rowIns(i){const t=tpl(i.tpl);return `<button class="row" data-a="openIns" data-x="${i.id}"><span class="ico">${ic(t.icon)}</span><span class="m"><b>${esc(insTitle(i))}</b><small>${esc(t.name)} · ${esc(sname(i.ans.site?.v))}</small></span>${stPill(i.st)}</button>`}
+function rowAct(a){return `<button class="row" data-a="editAct" data-x="${a.id}"><span class="ico">${ic('act')}</span><span class="m"><b>${esc(a.title)}</b><small>${esc(a.id)} · ${esc(a.type)} · fällig ${fd(a.due)}${overdue(a)?' · <span style="color:var(--red);font-weight:600">überfällig</span>':''}</small></span>${stPill(a.st)}</button>`}
+function rowIss(x){return `<button class="row" data-a="openIss" data-x="${x.id}"><span class="ico">${ic('alert')}</span><span class="m"><b>${esc(x.title)}</b><small>${esc(x.cat)} · ${esc(x.id)} · ${esc(sname(x.site))} · ${ago(x.at)}</small></span>${stPill(x.st)}</button>`}
+
+function siteChips(){return `<div class="chips"><button class="chip ${U.site?'on':''}" data-a="sheet" data-x="sites">${U.site?'Site: '+esc(sname(U.site))+' ✕':'Alle Sites ▾'}</button></div>`}
+function vIns(){
+ let h=hdMain('Inspektionen')+`<div class="scr"><div class="seg"><button class="${U.iseg==='tpl'?'on':''}" data-a="iseg" data-x="tpl">Vorlagen</button><button class="${U.iseg==='list'?'on':''}" data-a="iseg" data-x="list">Inspektionen</button></div>`;
+ if(U.iseg==='tpl')return h+`<div class="kick">Vorlage wählen und Inspektion beginnen</div>`+TPL.map(t=>`<button class="row" data-a="startIns" data-x="${t.id}"><span class="ico">${ic(t.icon)}</span><span class="m"><b>${esc(t.name)}</b><small>${t.pages.length} Seiten · ${allItems(t).filter(i=>i.t==='yn').length} Prüfpunkte</small></span></button>`).join('')+`</div>`;
+ h+=siteChips()+`<div class="chips">${[['all','Alle'],['prog','Im Gange'],['done','Abgeschlossen']].map(([k,l])=>`<button class="chip ${U.ist===k?'on':''}" data-a="ist" data-x="${k}">${l}</button>`).join('')}</div>`;
+ const L=S.ins.filter(i=>(!U.site||i.ans.site?.v===U.site)&&(U.ist==='all'||i.st===U.ist)).sort((a,b)=>b.upd-a.upd);
+ return h+(L.length?L.map(rowIns).join(''):`<div class="empty">${ic('clip')}<b>Keine Inspektionen</b>Filter ändern oder eine Vorlage starten.</div>`)+`</div>`;
+}
+function vIss(){
+ let h=hdMain('Probleme')+`<div class="scr"><div class="seg"><button class="${U.isf==='open'?'on':''}" data-a="isf" data-x="open">Offen</button><button class="${U.isf==='all'?'on':''}" data-a="isf" data-x="all">Alle</button></div>`+siteChips();
+ const L=S.issues.filter(x=>(U.isf==='all'||x.st!=='Gelöst')&&(!U.site||x.site===U.site)).sort((a,b)=>b.at-a.at);
+ return h+(L.length?L.map(rowIss).join(''):`<div class="empty">${ic('alert')}<b>Keine offenen Probleme</b>Vorfälle, Gefahren oder Feedback über + melden.</div>`)+`</div>`;
+}
+function vAct(){
+ let h=hdMain('Aktionen')+`<div class="scr"><div class="seg">${[['mine','Mir zugewiesen'],['over','Überfällig'],['all','Alle']].map(([k,l])=>`<button class="${U.aseg===k?'on':''}" data-a="aseg" data-x="${k}">${l}</button>`).join('')}</div>`+siteChips();
+ let L=S.actions.filter(a=>!U.site||a.site===U.site);
+ if(U.aseg==='mine')L=L.filter(a=>a.who===USER&&a.st!=='Erledigt');
+ if(U.aseg==='over')L=L.filter(overdue);
+ L.sort((a,b)=>(a.st==='Erledigt')-(b.st==='Erledigt')||a.due.localeCompare(b.due));
+ return h+(L.length?L.map(rowAct).join(''):`<div class="empty">${ic('act')}<b>Aufgaben im Team verfolgen</b>Aktionen aus Inspektionen, Assets oder Problemen erscheinen hier.</div>`)+`</div>`;
+}
+function installRow(){if(standalone())return '';if(!installEvt&&!isIOS)return '';return `<button class="row" data-a="install"><span class="ico">${ic('act')}</span><span class="m"><b>App installieren</b><small>Auf den Home-Bildschirm, startet offline</small></span></button>`}
+function vMore(){
+ const m=[['assets','asset','Assets',S.assets.length+' Anlagen'],['sitesV','pin','Sites',S.sites.length+' Standorte, Mitglied in allen'],['tplV','doc','Vorlagen',TPL.length+' Vorlagen (Bearbeitung im Web-Admin)']];
+ return hdMain('Mehr')+`<div class="scr">`+m.map(([v,i,t,s])=>`<button class="row" data-a="push" data-x="${v}"><span class="ico">${ic(i)}</span><span class="m"><b>${t}</b><small>${s}</small></span></button>`).join('')+
+ installRow()+`<div class="kick">Daten</div><button class="row" data-a="export"><span class="ico">${ic('doc')}</span><span class="m"><b>Daten als JSON kopieren</b><small>Für Analyse oder Import</small></span></button><button class="row" data-a="dlg" data-x="reset"><span class="ico">${ic('x')}</span><span class="m"><b>Neue Zufallsdaten erzeugen</b><small>Ersetzt alle lokalen Daten</small></span></button><p class="local">Angemeldet als ${USER} · lokal gespeichert, offline nutzbar</p></div>`;
+}
+
+/* ---------- stack screens ---------- */
+function sInsDetail(id){
+ const i=S.ins.find(x=>x.id===id),t=tpl(i.tpl),sc=score(i);
+ const links=S.actions.filter(a=>a.src===id),iss=S.issues.filter(x=>x.ins===id);
+ return hdSub('Inspektion',`<button class="ib" data-a="dlg" data-x="delIns" aria-label="Löschen">${ic('x')}</button>`)+`<div class="scr"><div class="big">${esc(insTitle(i))}</div>${stPill(i.st)}
+ <div style="margin:16px 0">${i.st==='done'?`<button class="btn" data-a="push" data-x="report">Bericht anzeigen</button>`:`<button class="btn" data-a="conduct">Fortfahren</button>`}</div>
+ <div class="card"><dl class="meta"><dt>Vorlage</dt><dd>${esc(t.name)}</dd><dt>Site</dt><dd>${esc(sname(i.ans.site?.v))}</dd><dt>Asset</dt><dd>${esc(aname(i.ans.asset?.v)||'–')}</dd><dt>Bewertung</dt><dd>${sc.y}/${sc.tot} (${sc.pct.toLocaleString('de-DE')} %)${sc.fl?` · <b style="color:var(--red)">${sc.fl} markiert</b>`:''}</dd><dt>Dauer</dt><dd>${dur(i)}</dd><dt>Standort</dt><dd>${esc(i.ans.loc?.v||'–')}</dd><dt>Gestartet von</dt><dd>${esc(i.by)}<span class="sub">${fdt(i.start)}</span></dd><dt>Zuletzt bearbeitet</dt><dd>${fdt(i.upd)}</dd><dt>Synchronisiert</dt><dd>lokal</dd></dl></div>
+ ${links.length?`<div class="kick">Aktionen aus dieser Inspektion</div>`+links.map(rowAct).join(''):''}${iss.length?`<div class="kick">Verknüpfte Probleme</div>`+iss.map(rowIss).join(''):''}</div>`;
+}
+const dur=i=>{const s=Math.round(((i.done||i.upd)-i.start)/1000);return s<60?s+' s':Math.floor(s/60)+' min '+(s%60)+' s'};
+
+function field(i,it){
+ const a=i.ans[it.id]||{},v=a.v||'',r=it.req?' <span class="req">*</span>':'';
+ let inner='';
+ if(it.t==='yn')inner=`<div class="yn">${[['y','Ja'],['n','Nein'],['na','N.A.']].map(([k,l])=>`<button class="${v===k?'on '+k:''}" data-a="yn" data-x="${it.id}:${k}">${l}</button>`).join('')}</div>`;
+ else if(it.t==='site')inner=`<select class="in" data-ans="${it.id}" id="f-${it.id}"><option value="">Site wählen</option>${S.sites.map(s=>`<option value="${s.id}" ${v===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select>`;
+ else if(it.t==='asset'){const L=S.assets.filter(x=>!i.ans.site?.v||x.site===i.ans.site.v);inner=`<select class="in" data-ans="${it.id}" id="f-${it.id}"><option value="">Kein Asset</option>${L.map(s=>`<option value="${s.id}" ${v===s.id?'selected':''}>${esc(s.name)} · ${esc(s.tid)}</option>`).join('')}</select>`}
+ else if(it.t==='datetime')inner=`<input class="in" type="datetime-local" data-ans="${it.id}" id="f-${it.id}" value="${esc(v)}">`;
+ else if(it.t==='number')inner=`<input class="in" type="number" inputmode="decimal" data-ans="${it.id}" id="f-${it.id}" value="${esc(v)}">`;
+ else if(it.t==='textarea')inner=`<textarea class="in" data-ans="${it.id}" id="f-${it.id}">${esc(v)}</textarea>`;
+ else if(it.t==='photo')inner=`<button class="btn sec" data-a="media" data-x="ans:${it.id}">${a.media?.length?'Weiteres Foto':'Foto aufnehmen oder wählen'}</button>`;
+ else if(it.t==='sig')inner=`<canvas class="sig" id="sig" data-id="${it.id}"></canvas><div class="qa"><button data-a="sigClr">Löschen</button><span class="sub" style="padding:8px">${v?'Unterschrieben':'Mit Finger oder Maus unterschreiben'}</span></div>`;
+ else inner=`<input class="in" type="text" data-ans="${it.id}" id="f-${it.id}" value="${esc(v)}">`;
+ const extra=['yn','number','text','photo'].includes(it.t)&&!['prep','loc'].includes(it.id);
+ return `<div class="q ${U.miss.includes(it.id)?'miss':''}" id="q-${it.id}"><h4>${esc(it.l)}${r}</h4>${inner}
+ ${a.note?`<div class="note">${esc(a.note)}</div>`:''}${a.media?.length?`<div class="thumbs">${a.media.map(m=>`<img src="${m}" alt="">`).join('')}</div>`:''}
+ ${extra?`<div class="qa"><button data-a="noteQ" data-x="${it.id}">${ic('note')}Anmerkung</button>${it.t!=='photo'?`<button data-a="media" data-x="ans:${it.id}">${ic('cam')}Medien</button>`:''}<button data-a="qAct" data-x="${it.id}">${ic('act')}Aktion</button></div>`:''}</div>`;
+}
+function sConduct(id){
+ const i=S.ins.find(x=>x.id===id),t=tpl(i.tpl),p=t.pages[U.page],sc=score(i),last=U.page===t.pages.length-1;
+ return hdSub(t.name,`<button class="ib" data-a="sheet" data-x="pages" aria-label="Seiten">${ic('doc')}</button>`)+`<div class="prog"><i style="width:${(U.page+1)/t.pages.length*100}%"></i></div>
+ <div class="scr"><div class="kick" style="margin-top:4px">Seite ${U.page+1}/${t.pages.length} · Bewertung ${sc.y}/${sc.tot} (${sc.pct.toLocaleString('de-DE')} %)</div><h3 style="margin:0 0 12px;font-size:20px">${esc(p.title)}</h3>${p.items.map(it=>field(i,it)).join('')}</div>
+ <div class="bar">${U.page?`<button class="btn sec" data-a="pg" data-x="-1">Zurück</button>`:''}${last?`<button class="btn" data-a="finish">Abschließen</button>`:`<button class="btn" data-a="pg" data-x="1">Weiter</button>`}</div>`;
+}
+function sDone(id){
+ const i=S.ins.find(x=>x.id===id),sc=score(i);
+ return `<div class="hd"></div><div class="scr" style="text-align:center"><div style="width:110px;height:110px;margin:40px auto 10px;border-radius:28px;background:var(--ok);display:grid;place-items:center;color:#fff"><svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12.5l4 4 8-9"/></svg></div><div class="big">Abgeschlossen</div><p class="sub">Bewertung ${sc.y}/${sc.tot} (${sc.pct.toLocaleString('de-DE')} %) · ${sc.fl} markierte Punkte</p></div>
+ <div class="bar" style="flex-direction:column"><button class="btn" data-a="doneRep">Bericht anzeigen</button><button class="btn sec" data-a="home">Speichern und schließen</button></div>`;
+}
+function sReport(id){
+ const i=S.ins.find(x=>x.id===id),t=tpl(i.tpl),sc=score(i);
+ const fl=allItems(t).filter(it=>it.t==='yn'&&i.ans[it.id]?.v==='n');
+ const val=(it)=>{const a=i.ans[it.id]||{};if(it.t==='yn')return {y:'Ja',n:'<span class="fl">Nein</span>',na:'N.A.'}[a.v]||'–';if(it.t==='site')return esc(sname(a.v));if(it.t==='asset')return esc(aname(a.v)||'–');if(it.t==='datetime')return fdt(a.v);if(it.t==='sig')return a.v?'✓':'–';if(it.t==='photo')return (a.media?.length||0)+' Foto(s)';return esc(a.v||'–')};
+ return hdSub('Bericht',`<button class="ib" data-a="copyRep" aria-label="Kopieren">${ic('doc')}</button>`)+`<div class="scr"><div class="rep"><h3>${esc(t.name)}</h3><div style="color:#555">${esc(sname(i.ans.site?.v))} · ${fdt(i.ans.date?.v)} · ${esc(i.ans.prep?.v||'')}</div>
+ <table><tr><td>Bewertung</td><td>${sc.y}/${sc.tot} (${sc.pct.toLocaleString('de-DE')} %)</td></tr><tr><td>Markierte Punkte</td><td>${sc.fl}</td></tr><tr><td>Asset</td><td>${esc(aname(i.ans.asset?.v)||'–')}</td></tr><tr><td>Abgeschlossen</td><td>${fdt(i.done)}</td></tr></table>
+ ${fl.length?`<div class="sec" style="background:#d92d20">Markierte Punkte (${fl.length})</div><table>${fl.map(it=>`<tr><td>${esc(it.l)}${i.ans[it.id].note?`<br><small style="color:#555">${esc(i.ans[it.id].note)}</small>`:''}</td><td class="fl">Nein</td></tr>`).join('')}</table>`:''}
+ ${t.pages.map(p=>`<div class="sec">${esc(p.title)}</div><table>${p.items.map(it=>`<tr><td>${esc(it.l)}${i.ans[it.id]?.note?`<br><small style="color:#555">${esc(i.ans[it.id].note)}</small>`:''}${(i.ans[it.id]?.media||[]).map(m=>`<br><img src="${m}" alt="" style="width:120px;margin-top:4px;border-radius:6px">`).join('')}${it.t==='sig'&&i.ans.sig?.v?`<br><img src="${i.ans.sig.v}" alt="Unterschrift" style="width:180px;background:#fafafa">`:''}</td><td>${val(it)}</td></tr>`).join('')}</table>`).join('')}
+ </div><p class="local">PDF-Export und Teilen übernimmt in der echten App der Server. Hier: Text kopieren oben rechts.</p></div>`;
+}
+function sIssNew(){
+ const d=U.idraft;
+ if(d.step===1)return hdSub('Problem melden')+`<div class="scr"><div class="ai">${ic('spark')}<span>Beschreiben Sie, was passiert ist. Die Assistenz füllt Kategorie, Titel, Priorität und Anlage vor.</span></div>
+ <label class="f"><span>Was ist passiert?</span><textarea class="in" id="idtext" data-id="text" style="min-height:150px" placeholder="z. B. An PV Array 1.3 ist ein Modul gebrochen, Kabel hängt lose.">${esc(d.text)}</textarea></label>
+ <button class="btn sec" data-a="media" data-x="idraft">Medien hinzufügen</button>${d.media.length?`<div class="thumbs">${d.media.map(m=>`<img src="${m}" alt="">`).join('')}</div>`:''}
+ <p class="sub" style="margin-top:10px">Bis zu 10 Fotos. Audioaufnahme ist im Browser-Prototyp nicht verfügbar.</p></div>
+ <div class="bar"><button class="btn ghost" data-a="manual">Manuell eingeben</button><button class="btn" data-a="analyze">Fortfahren</button></div>`;
+ if(d.step===2)return hdSub('Problem melden')+`<div class="scr" style="text-align:center"><div class="spin"></div><b>Analysieren …</b></div>`;
+ return hdSub('Problem melden')+`<div class="scr">${d.ai?`<div class="ai">${ic('spark')}<span>Vorausgefüllt (simulierte KI, regelbasiert). Bitte prüfen. War das hilfreich? <button class="chip" data-a="aiFb" data-x="1">Ja</button> <button class="chip" data-a="aiFb" data-x="0">Nein</button></span></div>`:''}
+ <label class="f"><span>Kategorie <span class="req">*</span></span><select class="in" id="ic" data-id="cat">${['','Vorfall','Beinaheunfall','Gefährdung','Technischer Mangel','Umwelt','Feedback'].map(c=>`<option ${d.cat===c?'selected':''} value="${c}">${c||'Kategorie wählen'}</option>`).join('')}</select></label>
+ <label class="f"><span>Titel <span class="req">*</span></span><input class="in" id="it" data-id="title" value="${esc(d.title)}"></label>
+ <label class="f"><span>Beschreibung</span><textarea class="in" id="idsc" data-id="text">${esc(d.text)}</textarea></label>
+ <label class="f"><span>Priorität</span><select class="in" id="ip" data-id="prio">${['Niedrig','Mittel','Hoch'].map(c=>`<option ${d.prio===c?'selected':''}>${c}</option>`).join('')}</select></label>
+ <label class="f"><span>Site</span><select class="in" id="is" data-id="site" data-re="1">${S.sites.map(s=>`<option value="${s.id}" ${d.site===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select></label>
+ <label class="f"><span>Asset</span><select class="in" id="ia" data-id="asset"><option value="">Kein Asset</option>${S.assets.filter(a=>a.site===d.site).map(a=>`<option value="${a.id}" ${d.asset===a.id?'selected':''}>${esc(a.name)}</option>`).join('')}</select></label>
+ <label class="f"><span>Aufgetreten am</span><input class="in" type="datetime-local" id="iat" data-id="at" value="${esc(d.at)}"></label>
+ ${d.media.length?`<div class="thumbs">${d.media.map(m=>`<img src="${m}" alt="">`).join('')}</div>`:''}</div>
+ <div class="bar"><button class="btn" data-a="sendIss">Senden</button></div>`;
+}
+function sIss(id){
+ const x=S.issues.find(i=>i.id===id),acts=S.actions.filter(a=>a.src===id);
+ const tb=[['ov','Übersicht'],['det','Einzelheiten'],['log','Aktivität']].map(([k,l])=>`<button class="${U.itab===k?'on':''}" data-a="itab" data-x="${k}">${l}</button>`).join('');
+ let b='';
+ if(U.itab==='ov')b=`<div class="card"><label class="f" style="margin:0"><span>Status</span><select class="in" id="ist" data-iss="st">${['Offen','In Bearbeitung','Gelöst'].map(s=>`<option ${x.st===s?'selected':''}>${s}</option>`).join('')}</select></label></div>
+ <div class="card"><b>${esc(sname(x.site))}</b><span class="sub">${esc(site(x.site)?.addr||'')}${x.asset?' · '+esc(aname(x.asset)):''}</span>${x.media.length?`<div class="thumbs">${x.media.map(m=>`<img src="${m}" alt="">`).join('')}</div>`:''}<div class="qa"><button data-a="media" data-x="iss:${x.id}">${ic('cam')}Foto hinzufügen</button></div></div>
+ ${x.ins&&S.ins.some(i=>i.id===x.ins)?`<div class="kick">Verknüpfte Inspektion</div>`+rowIns(S.ins.find(i=>i.id===x.ins)):''}
+ <div class="kick">Aktionen</div>${acts.map(rowAct).join('')}<button class="btn sec" data-a="newAct" data-x="iss:${x.id}">Aktion erstellen</button>`;
+ if(U.itab==='det')b=`<div class="card"><dl class="meta"><dt>Kategorie</dt><dd>${esc(x.cat)}</dd><dt>Priorität</dt><dd>${prPill(x.prio)}</dd><dt>Aufgetreten</dt><dd>${fdt(x.at)}</dd><dt>Site</dt><dd>${esc(sname(x.site))}</dd><dt>Asset</dt><dd>${esc(aname(x.asset)||'–')}</dd><dt>ID</dt><dd>${x.id}</dd><dt>Erstellt von</dt><dd>${esc(x.by)}</dd></dl></div><div class="card">${esc(x.desc)||'<span class="sub">Keine Beschreibung</span>'}</div>`;
+ if(U.itab==='log')b=x.log.slice().reverse().map(l=>`<div class="act">${esc(l.x)}<small>${esc(l.w)} · ${fdt(l.t)}</small></div>`).join('')+`<label class="f" style="margin-top:14px"><span>Kommentar</span><textarea class="in" id="cmt"></textarea></label><button class="btn" data-a="cmt">Kommentar senden</button>`;
+ return hdSub(x.id)+`<div class="scr"><div class="big" style="font-size:26px">${esc(x.title)}</div><div style="margin-bottom:12px">${stPill(x.st)} ${prPill(x.prio)} <span class="pill">${esc(x.cat)}</span></div><div class="tabsx">${tb}</div>${b}</div>`;
+}
+const TYPES={'Aktion':[],'PSA-Bestellung':[['size','Größe'],['qty','Anzahl']],'SAP-Meldung':[['eq','Equipment / TPLNR'],['art','Meldungsart']]};
+function sAct(){
+ const d=U.draft,isNew=!S.actions.some(a=>a.id===d.id);
+ const src=d.src?`<div class="ai">${ic('act')}<span>Quelle: ${esc(d.srcl||d.src)}</span></div>`:'';
+ return hdSub(isNew?'Neue Aktion':d.id,isNew?'':`<button class="ib" data-a="dlg" data-x="delAct" aria-label="Löschen">${ic('x')}</button>`)+`<div class="scr">${src}
+ <label class="f"><span>Typ</span><select class="in" id="at" data-d="type" data-re="1">${Object.keys(TYPES).map(t=>`<option ${d.type===t?'selected':''}>${t}</option>`).join('')}</select></label>
+ <label class="f"><span>Titel <span class="req">*</span></span><input class="in" id="att" data-d="title" value="${esc(d.title)}"></label>
+ <label class="f"><span>Beschreibung</span><textarea class="in" id="ad" data-d="desc">${esc(d.desc)}</textarea></label>
+ <div class="kick" style="margin-top:0">Status</div><div class="seg">${['Offen','In Bearbeitung','Erledigt'].map(s=>`<button class="${d.st===s?'on':''}" data-a="ast" data-x="${s}">${s}</button>`).join('')}</div>
+ <label class="f"><span>Priorität</span><select class="in" id="ap" data-d="prio">${['Niedrig','Mittel','Hoch'].map(c=>`<option ${d.prio===c?'selected':''}>${c}</option>`).join('')}</select></label>
+ <label class="f"><span>Fällig am</span><input class="in" type="date" id="adue" data-d="due" value="${esc(d.due)}"></label>
+ <label class="f"><span>Beauftragt</span><select class="in" id="aw" data-d="who">${[USER,'Lennart Peters','Priyanka Joshi','Farouk Elguefrei'].map(c=>`<option ${d.who===c?'selected':''}>${c}</option>`).join('')}</select></label>
+ <label class="f"><span>Site</span><select class="in" id="as" data-d="site" data-re="1">${S.sites.map(s=>`<option value="${s.id}" ${d.site===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select></label>
+ <label class="f"><span>Asset</span><select class="in" id="aa" data-d="asset"><option value="">Kein Asset</option>${S.assets.filter(a=>a.site===d.site).map(a=>`<option value="${a.id}" ${d.asset===a.id?'selected':''}>${esc(a.name)}</option>`).join('')}</select></label>
+ ${TYPES[d.type].length?`<div class="kick">Benutzerdefinierte Felder · ${esc(d.type)}</div>`+TYPES[d.type].map(([k,l])=>`<label class="f"><span>${l}</span><input class="in" id="cf-${k}" data-cf="${k}" value="${esc(d.cf[k]||'')}"></label>`).join(''):''}
+ <p class="sub">Sichtbar für Mitglieder des Standorts.</p></div><div class="bar"><button class="btn" data-a="saveAct">Speichern</button></div>`;
+}
+function sAssets(){
+ const q=U.q.toLowerCase();
+ let h=hdSub('Assets')+`<div class="scr"><input class="in" id="aq" data-q="1" placeholder="Name oder technische ID suchen" value="${esc(U.q)}" style="margin-bottom:12px">`;
+ for(const s of S.sites){const L=S.assets.filter(a=>a.site===s.id&&(!q||(a.name+a.tid).toLowerCase().includes(q)));if(!L.length)continue;
+  h+=`<div class="kick">${esc(s.name)}</div>`+L.map(a=>{const o=S.actions.filter(x=>x.asset===a.id&&x.st!=='Erledigt').length+S.issues.filter(x=>x.asset===a.id&&x.st!=='Gelöst').length;return `<button class="row" data-a="openAsset" data-x="${a.id}"><span class="ico">${ic(a.type==='WEA'?'wind':a.type==='PV-Array'?'sun':'asset')}</span><span class="m"><b>${esc(a.name)}</b><small>${esc(a.type)} · ${esc(a.tid)}</small></span>${o?`<span class="pill p-open">${o} offen</span>`:`<span class="pill">${esc(a.st)}</span>`}</button>`}).join('')}
+ return h+`</div>`;
+}
+function sAsset(id){
+ const a=asset(id),acts=S.actions.filter(x=>x.asset===id),iss=S.issues.filter(x=>x.asset===id),ins=S.ins.filter(x=>x.ans.asset?.v===id);
+ const tb=[['open','Zu erledigen'],['hist','Verlauf'],['det','Einzelheiten']].map(([k,l])=>`<button class="${U.atab===k?'on':''}" data-a="atab" data-x="${k}">${l}</button>`).join('');
+ let b='';
+ if(U.atab==='open'){const oa=acts.filter(x=>x.st!=='Erledigt'),oi=iss.filter(x=>x.st!=='Gelöst'),op=ins.filter(x=>x.st==='prog');b=(oa.length+oi.length+op.length)?op.map(rowIns).join('')+oi.map(rowIss).join('')+oa.map(rowAct).join(''):`<div class="empty">${ic('check')}<b>Keine offenen Aufgaben</b>Für dieses Asset ist nichts offen.</div>`}
+ if(U.atab==='hist')b=ins.map(rowIns).join('')+iss.map(rowIss).join('')+acts.map(rowAct).join('')||'<p class="sub">Noch kein Verlauf.</p>';
+ if(U.atab==='det')b=`<div class="card"><dl class="meta"><dt>Typ</dt><dd>${esc(a.type)}</dd><dt>Technische ID</dt><dd style="overflow-wrap:anywhere">${esc(a.tid)}</dd><dt>Site</dt><dd>${esc(sname(a.site))}</dd><dt>Status</dt><dd>${esc(a.st)}</dd></dl></div>`;
+ return hdSub(a.tid)+`<div class="scr"><div class="big" style="font-size:28px">${esc(a.name)}</div><div style="margin-bottom:12px"><span class="pill">${esc(a.type)}</span> <span class="pill">${esc(sname(a.site))}</span></div><div class="tabsx">${tb}</div>${b}</div><button class="fab" style="bottom:24px" data-a="sheet" data-x="assetPlus" aria-label="Neu">+</button>`;
+}
+function sSites(){return hdSub('Sites')+`<div class="scr">`+S.sites.map(s=>`<div class="card"><b>${esc(s.name)}</b><span class="sub">${esc(s.addr)}</span><span class="sub">${S.assets.filter(a=>a.site===s.id).length} Assets · ${S.ins.filter(i=>i.ans.site?.v===s.id).length} Inspektionen · ${S.issues.filter(i=>i.site===s.id&&i.st!=='Gelöst').length} offene Probleme</span></div>`).join('')+`</div>`}
+function sTpl(){return hdSub('Vorlagen')+`<div class="scr">`+TPL.map(t=>`<div class="card"><b>${esc(t.name)}</b>${t.pages.map((p,k)=>`<div class="sub" style="margin-top:6px">${k+1}. ${esc(p.title)}: ${p.items.map(i=>esc(i.l)).join(' · ')}</div>`).join('')}</div>`).join('')+`<p class="local">Vorlagen werden als JSON-Schema definiert. Ein Editor gehört in den Web-Admin.</p></div>`}
+
+/* ---------- sheets + dialogs ---------- */
+function sheet(){
+ const k=U.sheet;if(!k)return '';let h='';
+ if(k==='plus')h=`<h3>Erstellen</h3><button class="row" data-a="sheetGo" data-x="ins"><span class="ico">${ic('clip')}</span><span class="m"><b>Inspektion beginnen</b><small>Vorlage wählen und starten</small></span></button><button class="row" data-a="sheetGo" data-x="iss"><span class="ico">${ic('alert')}</span><span class="m"><b>Problem melden</b><small>Vorfall, Gefahr oder Feedback erfassen</small></span></button><button class="row" data-a="sheetGo" data-x="act"><span class="ico">${ic('act')}</span><span class="m"><b>Aktion erstellen</b><small>Aufgabe anlegen und zuweisen</small></span></button>`;
+ if(k==='assetPlus')h=`<h3>Für dieses Asset</h3>`+TPL.map(t=>`<button class="row" data-a="startIns" data-x="${t.id}"><span class="ico">${ic(t.icon)}</span><span class="m"><b>${esc(t.name)}</b><small>Inspektion beginnen</small></span></button>`).join('')+`<button class="row" data-a="sheetGo" data-x="iss"><span class="ico">${ic('alert')}</span><span class="m"><b>Problem melden</b></span></button><button class="row" data-a="sheetGo" data-x="act"><span class="ico">${ic('act')}</span><span class="m"><b>Aktion erstellen</b></span></button>`;
+ if(k==='sites')h=`<h3>Site filtern</h3><button class="row" data-a="setSite" data-x=""><span class="m"><b>Alle Sites</b></span></button>`+S.sites.map(s=>`<button class="row" data-a="setSite" data-x="${s.id}"><span class="ico">${ic('pin')}</span><span class="m"><b>${esc(s.name)}</b></span>${U.site===s.id?'✓':''}</button>`).join('');
+ if(k==='pages'){const i=S.ins.find(x=>x.id===top().id),t=tpl(i.tpl);h=`<h3>Seiten</h3>`+t.pages.map((p,n)=>`<button class="row" data-a="goPage" data-x="${n}"><span class="m"><b>${n+1}. ${esc(p.title)}</b><small>${p.items.filter(it=>i.ans[it.id]?.v).length}/${p.items.length} beantwortet</small></span></button>`).join('')}
+ if(k==='note')h=`<h3>Anmerkung</h3><textarea class="in" id="noteIn">${esc(curIns().ans[U.noteId]?.note||'')}</textarea><div style="height:10px"></div><button class="btn" data-a="saveNote">Sichern</button>`;
+ return `<div class="ov" data-a="closeOv"><div class="sheet" data-stop="1">${h}</div></div>`;
+}
+function dlg(){
+ const k=U.dlg;if(!k)return '';let h='';
+ if(k==='miss')h=`<h3>Einige Objekte erfordern Aufmerksamkeit</h3><p>${U.miss.length} Pflichtfeld(er) offen. Ergänzen Sie diese, um die Inspektion abzuschließen.</p><button class="btn" data-a="review">Inspektion überprüfen</button><button class="btn sec" data-a="saveProg">Als „Im Gange“ speichern</button><button class="btn ghost" data-a="closeDlg">Abbrechen</button>`;
+ if(k==='reset')h=`<h3>Neue Zufallsdaten erzeugen?</h3><p>Sites, Assets, Inspektionen, Probleme und Aktionen werden neu ausgewürfelt. Lokale Änderungen gehen verloren.</p><button class="btn" style="background:var(--red)" data-a="doReset">Neu erzeugen</button><button class="btn ghost" data-a="closeDlg">Abbrechen</button>`;
+ if(k==='delIns')h=`<h3>Inspektion löschen?</h3><p>Das kann nicht rückgängig gemacht werden.</p><button class="btn" style="background:var(--red)" data-a="doDelIns">Löschen</button><button class="btn ghost" data-a="closeDlg">Abbrechen</button>`;
+ if(k==='delAct')h=`<h3>Aktion löschen?</h3><p>${esc(U.draft?.title)}</p><button class="btn" style="background:var(--red)" data-a="doDelAct">Löschen</button><button class="btn ghost" data-a="closeDlg">Abbrechen</button>`;
+ if(k==='ios')h=`<h3>Auf iPhone/iPad installieren</h3><p>1. In Safari unten auf Teilen tippen.<br>2. „Zum Home-Bildschirm“ wählen.<br>3. „Hinzufügen“ bestätigen.</p><button class="btn" data-a="closeDlg">Verstanden</button>`;
+ if(k==='discard')h=`<h3>Nicht gespeicherte Änderungen verwerfen?</h3><p>Ihre Eingaben gehen verloren.</p><button class="btn" style="background:var(--red)" data-a="doDiscard">Ja, verwerfen</button><button class="btn ghost" data-a="closeDlg">Abbrechen</button>`;
+ return `<div class="ov c"><div class="dlg">${h}</div></div>`;
+}
+
+/* ---------- render ---------- */
+const app=document.getElementById('app');
+let lastKey='';
+function render(reset){
+ const sc=app.querySelector('.scr'),pos=sc?sc.scrollTop:0;
+ const tp=top();let body;
+ if(tp){body=({ins:()=>sInsDetail(tp.id),conduct:()=>sConduct(tp.id),done:()=>sDone(tp.id),report:()=>sReport(tp.id),issNew:sIssNew,iss:()=>sIss(tp.id),act:sAct,assets:sAssets,asset:()=>sAsset(tp.id),sitesV:sSites,tplV:sTpl})[tp.v]()}
+ else body=({start:vStart,ins:vIns,iss:vIss,act:vAct,more:vMore})[U.tab]();
+ const tabs=tp?'':`<button class="fab" data-a="sheet" data-x="plus" aria-label="Erstellen">+</button><nav class="tabs">${[['start','home','Start'],['ins','clip','Inspektionen'],['iss','alert','Probleme'],['act','check','Aktionen'],['more','grid','Mehr']].map(([k,i,l])=>`<button class="tab ${U.tab===k?'on':''}" data-a="tab" data-x="${k}">${ic(i)}${l}</button>`).join('')}</nav>`;
+ app.innerHTML=`<div class="status"><span>${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</span><span>Offline bereit</span></div>${body}${tabs}${sheet()}${dlg()}`;
+ const key=(tp?tp.v+tp.id+U.page:U.tab);
+ const ns=app.querySelector('.scr');if(ns&&!reset&&key===lastKey)ns.scrollTop=pos;lastKey=key;
+ initSig();
+}
+let tt;
+function toast(m){clearTimeout(tt);app.querySelector('.toast')?.remove();const d=document.createElement('div');d.className='toast';d.textContent=m;app.appendChild(d);tt=setTimeout(()=>d.remove(),2200)}
+const curIns=()=>S.ins.find(x=>x.id===top()?.id);
+
+function initSig(){
+ const c=document.getElementById('sig');if(!c)return;
+ const i=curIns(),id=c.dataset.id,r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+ c.width=r.width*dpr;c.height=r.height*dpr;const g=c.getContext('2d');g.scale(dpr,dpr);g.lineWidth=2.2;g.lineCap='round';g.strokeStyle='#14191c';
+ if(i.ans[id]?.v){const im=new Image();im.onload=()=>g.drawImage(im,0,0,r.width,r.height);im.src=i.ans[id].v}
+ let dn=false;const p=e=>[e.clientX-r.left,e.clientY-r.top];
+ c.onpointerdown=e=>{dn=true;c.setPointerCapture(e.pointerId);const [x,y]=p(e);g.beginPath();g.moveTo(x,y)};
+ c.onpointermove=e=>{if(!dn)return;const [x,y]=p(e);g.lineTo(x,y);g.stroke()};
+ c.onpointerup=()=>{if(!dn)return;dn=false;i.ans[id]={...(i.ans[id]||{}),v:c.toDataURL('image/png')};i.upd=now();U.miss=U.miss.filter(m=>m!==id);save()};
+}
+
+/* ---------- actions ---------- */
+function newIns(tid,assetId){
+ const a=assetId?asset(assetId):null,st=a?a.site:(U.site||S.sites[0].id);
+ const i={id:'I'+(S.n.I++),tpl:tid,st:'prog',by:USER,start:now(),upd:now(),ans:{site:{v:st},asset:{v:a?a.id:''},date:{v:toLocal(now())},prep:{v:USER},loc:{v:site(st).addr}}};
+ S.ins.push(i);save();U.sheet=null;U.stack.push({v:'ins',id:i.id});U.stack.push({v:'conduct',id:i.id});U.page=0;U.miss=[];render(true);
+}
+function newAct(srcKey){
+ const t=top();let site0=U.site||S.sites[0].id,asset0='',src='',srcl='',title='';
+ if(srcKey?.startsWith('iss:')){const x=S.issues.find(i=>i.id===srcKey.slice(4));site0=x.site;asset0=x.asset;src=x.id;srcl='Problem '+x.id+': '+x.title}
+ if(srcKey?.startsWith('q:')){const i=curIns(),it=allItems(tpl(i.tpl)).find(q=>q.id===srcKey.slice(2));site0=i.ans.site?.v||site0;asset0=i.ans.asset?.v||'';src=i.id;srcl='Inspektion, Frage: '+it.l;title='Mangel: '+it.l.replace(/\?$/,'')}
+ if(t?.v==='asset'){asset0=t.id;site0=asset(t.id).site}
+ U.draft={id:'AC-'+S.n.AC,type:'Aktion',title,desc:'',prio:'Niedrig',due:toLocal(now()+7*DAY).slice(0,10),who:USER,site:site0,asset:asset0,st:'Offen',cf:{},src,srcl,_new:1};
+ U.sheet=null;push('act');
+}
+function newIss(){const t=top();const a=t?.v==='asset'?asset(t.id):null;U.idraft={step:1,text:'',media:[],cat:'',title:'',prio:'Mittel',site:a?a.site:(U.site||S.sites[0].id),asset:a?a.id:'',at:toLocal(now()),ai:0};U.sheet=null;push('issNew')}
+function analyze(){
+ const d=U.idraft,t=d.text.toLowerCase();d.step=2;render(true);
+ setTimeout(()=>{
+  const R=[[/verletz|unfall|gestürzt|gerutscht|rutsch|gestolpert/,'Vorfall'],[/beinahe|fast |knapp/,'Beinaheunfall'],[/öl|leck|ausgelaufen|umwelt/,'Umwelt'],[/defekt|kaputt|bruch|gebrochen|riss|fehlermeldung|ausfall|lose/,'Technischer Mangel'],[/gefahr|ungesichert|offen|fehlt|blockiert/,'Gefährdung']];
+  d.cat=(R.find(([r])=>r.test(t))||[0,'Feedback'])[1];
+  d.prio=/sofort|dringend|brand|feuer|strom|verletz|spannung/.test(t)?'Hoch':d.cat==='Feedback'?'Niedrig':'Mittel';
+  const hit=S.assets.find(a=>t.includes(a.name.toLowerCase())||t.includes(a.name.toLowerCase().replace(/^pv array /,'array ')));
+  if(hit){d.asset=hit.id;d.site=hit.site}
+  const s=d.text.trim().split(/[.!?](?:\s|$)|\n/)[0];d.title=s.length>70?s.slice(0,67)+'…':s;
+  d.ai=1;d.step=3;if(top()?.v==='issNew')render(true);
+ },1100);
+}
+async function shrink(f){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.6))};im.onerror=()=>res(null);im.src=r.result};r.readAsDataURL(f)})}
+const fileIn=document.getElementById('file');let mTarget='';
+fileIn.addEventListener('change',async()=>{
+ const fs=[...fileIn.files].slice(0,10);fileIn.value='';const imgs=(await Promise.all(fs.map(shrink))).filter(Boolean);if(!imgs.length)return;
+ if(mTarget.startsWith('ans:')){const i=curIns(),id=mTarget.slice(4);i.ans[id]={...(i.ans[id]||{})};i.ans[id].media=[...(i.ans[id].media||[]),...imgs];if(tpl(i.tpl).pages.flatMap(p=>p.items).find(q=>q.id===id).t==='photo')i.ans[id].v='foto';i.upd=now()}
+ if(mTarget==='idraft')U.idraft.media.push(...imgs.slice(0,10-U.idraft.media.length));
+ if(mTarget.startsWith('iss:')){const x=S.issues.find(i=>i.id===mTarget.slice(4));x.media.push(...imgs);x.log.push({t:now(),w:USER,x:imgs.length+' Foto(s) hinzugefügt'})}
+ save();render();toast(imgs.length+' Foto(s) hinzugefügt');
+});
+function reportText(i){const t=tpl(i.tpl),sc=score(i);let s=`${t.name}\n${sname(i.ans.site?.v)} · ${fdt(i.ans.date?.v)} · ${i.ans.prep?.v}\nBewertung ${sc.y}/${sc.tot} (${sc.pct} %), ${sc.fl} markiert\n`;for(const p of t.pages){s+=`\n== ${p.title} ==\n`;for(const it of p.items){const a=i.ans[it.id]||{};let v=a.v||'–';if(it.t==='yn')v={y:'Ja',n:'NEIN',na:'N.A.'}[a.v]||'–';if(it.t==='site')v=sname(a.v);if(it.t==='asset')v=aname(a.v)||'–';if(it.t==='sig'||it.t==='photo')v=a.v?'✓':'–';s+=`${it.l}: ${v}${a.note?' ('+a.note+')':''}\n`}}return s}
+async function copy(txt,msg){try{await navigator.clipboard.writeText(txt);toast(msg)}catch(e){toast('Kopieren nicht erlaubt')}}
+
+const H={
+ tab:x=>{U.tab=x;U.stack=[];render(true)},back:()=>{const t=top();if(t?.v==='act'&&U.draft?._dirty){U.dlg='discard';render();return}if(t?.v==='issNew'&&U.idraft.text&&U.idraft.step!==3){U.dlg='discard';render();return}pop()},
+ home:()=>{U.stack=[];U.tab='ins';U.iseg='list';render(true)},toast:x=>toast(x),
+ sheet:x=>{if(x==='sites'&&U.site){U.site='';render();return}U.sheet=x;render()},closeOv:()=>{U.sheet=null;render()},closeDlg:()=>{U.dlg=null;render()},dlg:x=>{U.dlg=x;render()},
+ sheetGo:x=>{if(x==='ins'){U.sheet=null;U.tab='ins';U.iseg='tpl';U.stack=[];render(true)}if(x==='iss')newIss();if(x==='act')newAct()},
+ setSite:x=>{U.site=x;U.sheet=null;render(true)},
+ goAct:x=>{U.tab='act';U.aseg=x;render(true)},goIns:()=>{U.tab='ins';U.iseg='list';U.ist='prog';render(true)},
+ iseg:x=>{U.iseg=x;render(true)},ist:x=>{U.ist=x;render()},isf:x=>{U.isf=x;render()},aseg:x=>{U.aseg=x;render()},
+ openIns:x=>{const i=S.ins.find(y=>y.id===x);push('ins',x)},startIns:x=>{const t=top();newIns(x,t?.v==='asset'?t.id:'')},
+ conduct:()=>push('conduct',top().id),
+ yn:x=>{const [id,v]=x.split(':'),i=curIns();i.ans[id]={...(i.ans[id]||{}),v:i.ans[id]?.v===v?'':v};i.upd=now();U.miss=U.miss.filter(m=>m!==id);save();render()},
+ pg:x=>{const t=tpl(curIns().tpl);U.page=Math.max(0,Math.min(t.pages.length-1,U.page+ +x));render(true)},
+ goPage:x=>{U.page=+x;U.sheet=null;render(true)},
+ noteQ:x=>{U.noteId=x;U.sheet='note';render();setTimeout(()=>document.getElementById('noteIn')?.focus(),50)},
+ saveNote:()=>{const i=curIns(),v=document.getElementById('noteIn').value.trim();i.ans[U.noteId]={...(i.ans[U.noteId]||{}),note:v};i.upd=now();U.sheet=null;save();render()},
+ media:x=>{mTarget=x;fileIn.click()},
+ qAct:x=>newAct('q:'+x),
+ sigClr:()=>{const c=document.getElementById('sig'),i=curIns();i.ans[c.dataset.id]={v:''};save();render()},
+ finish:()=>{const i=curIns();U.miss=missing(i).map(m=>m.id);if(U.miss.length){U.dlg='miss';render();return}i.st='done';i.done=now();i.upd=now();save();U.stack.pop();U.stack.push({v:'done',id:i.id});render(true)},
+ review:()=>{const i=curIns(),t=tpl(i.tpl);U.page=t.pages.findIndex(p=>p.items.some(it=>U.miss.includes(it.id)));U.dlg=null;render(true);setTimeout(()=>document.getElementById('q-'+U.miss[0])?.scrollIntoView({block:'center'}),30)},
+ saveProg:()=>{U.dlg=null;U.miss=[];U.stack.pop();render(true);toast('Als „Im Gange“ gespeichert')},
+ doneRep:()=>{const id=top().id;U.stack.pop();U.stack.push({v:'report',id});render(true)},
+ copyRep:()=>copy(reportText(curIns()),'Bericht als Text kopiert'),
+ doDelIns:()=>{S.ins=S.ins.filter(i=>i.id!==top().id);U.dlg=null;save();pop()},
+ openIss:x=>{U.itab='ov';push('iss',x)},itab:x=>{U.itab=x;render(true)},
+ cmt:()=>{const v=document.getElementById('cmt').value.trim();if(!v)return;const x=S.issues.find(i=>i.id===top().id);x.log.push({t:now(),w:USER,x:'Kommentar: '+v});save();render()},
+ manual:()=>{U.idraft.step=3;U.idraft.ai=0;render(true)},analyze:()=>{if(!U.idraft.text.trim()&&!U.idraft.media.length){toast('Bitte kurz beschreiben');return}analyze()},
+ aiFb:x=>{U.idraft.ai=0;toast(x==='1'?'Danke für das Feedback':'Feedback gespeichert');render()},
+ sendIss:()=>{const d=U.idraft;if(!d.cat||!d.title.trim()){toast('Kategorie und Titel fehlen');return}const id='IS-'+(S.n.IS++);S.issues.push({id,cat:d.cat,title:d.title.trim(),desc:d.text,st:'Offen',prio:d.prio,site:d.site,asset:d.asset,at:new Date(d.at).getTime()||now(),media:d.media,by:USER,log:[{t:now(),w:USER,x:'Problem erstellt'}]});save();U.stack.pop();U.itab='ov';U.stack.push({v:'iss',id});render(true);toast('Problem '+id+' gemeldet')},
+ newAct:x=>newAct(x),
+ editAct:x=>{const a=S.actions.find(y=>y.id===x);U.draft=JSON.parse(JSON.stringify(a));const src=a.src;U.draft.srcl=src?(src.startsWith('IS')?'Problem '+src:'Inspektion '+src):'';push('act')},
+ ast:x=>{U.draft.st=x;U.draft._dirty=1;render()},
+ saveAct:()=>{const d=U.draft;if(!d.title.trim()){toast('Titel fehlt');return}const {_new,_dirty,srcl,...a}=d;const k=S.actions.findIndex(y=>y.id===a.id);if(k<0){S.actions.push(a);S.n.AC++}else S.actions[k]=a;const src=S.issues.find(i=>i.id===a.src);if(src&&k<0)src.log.push({t:now(),w:USER,x:'Aktion '+a.id+' erstellt'});save();pop();toast('Aktion '+a.id+' gespeichert')},
+ doDelAct:()=>{S.actions=S.actions.filter(a=>a.id!==U.draft.id);U.dlg=null;save();pop()},
+ doDiscard:()=>{U.dlg=null;pop()},
+ push:x=>{U.q='';push(x)},openAsset:x=>{U.atab='open';push('asset',x)},atab:x=>{U.atab=x;render(true)},
+ export:()=>copy(JSON.stringify(S,null,1),'JSON kopiert'),
+ doReset:()=>{S=seed();U.dlg=null;U.stack=[];U.site='';save();render(true);toast('Neue Zufallsdaten erzeugt')}
+};
+app.addEventListener('click',e=>{
+ const b=e.target.closest('[data-a]');
+ if(!b)return;
+ if(b.dataset.a==='closeOv'&&e.target.closest('[data-stop]'))return;
+ H[b.dataset.a]?.(b.dataset.x??'',b,e);
+});
+app.addEventListener('input',e=>{
+ const el=e.target,d=el.dataset;
+ if(d.ans){const i=curIns();i.ans[d.ans]={...(i.ans[d.ans]||{}),v:el.value};i.upd=now();U.miss=U.miss.filter(m=>m!==d.ans);save();if(el.tagName==='SELECT')render()}
+ else if(d.id&&U.idraft){U.idraft[d.id]=el.value;if(d.re){U.idraft.asset='';render()}}
+ else if(d.d&&U.draft){U.draft[d.d]=el.value;U.draft._dirty=1;if(d.re){if(d.d==='site')U.draft.asset='';if(d.d==='type')U.draft.cf={};render()}}
+ else if(d.cf&&U.draft){U.draft.cf[d.cf]=el.value;U.draft._dirty=1}
+ else if(d.iss){const x=S.issues.find(i=>i.id===top().id);x.st=el.value;x.log.push({t:now(),w:USER,x:'Status: '+el.value});save();render()}
+ else if(d.q){U.q=el.value;const pos=el.selectionStart;render();const n=document.getElementById('aq');n.focus();n.setSelectionRange(pos,pos)}
+});
+/* ---------- PWA: Installation + Updates ---------- */
+let installEvt=null;
+const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(U.tab==='more'&&!top())render()});
+window.addEventListener('appinstalled',()=>{installEvt=null;toast('Feldcheck installiert');render()});
+H.install=async()=>{if(installEvt){installEvt.prompt();await installEvt.userChoice;installEvt=null;render()}else{U.dlg='ios';render()}};
+H.update=()=>{waitingSW?.postMessage('SKIP_WAITING')};
+let waitingSW=null;
+if('serviceWorker' in navigator&&location.protocol!=='file:'){
+ navigator.serviceWorker.register('sw.js').then(reg=>{
+  const offer=w=>{waitingSW=w;showUpdate()};
+  if(reg.waiting&&navigator.serviceWorker.controller)offer(reg.waiting);
+  reg.addEventListener('updatefound',()=>{const w=reg.installing;w?.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)offer(w)})});
+ }).catch(()=>{});
+ let reloaded=false;
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloaded)return;reloaded=true;location.reload()});
+}
+function showUpdate(){const d=document.createElement('button');d.className='toast';d.style.cursor='pointer';d.textContent='Neue Version verfügbar · Tippen zum Laden';d.onclick=H.update;app.appendChild(d)}
+const start=()=>render(true);
+start();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "Feldcheck – Inspektionen, Probleme, Aktionen",
+  "short_name": "Feldcheck",
+  "description": "Prototyp einer Inspektions-App für Anlagen im Feld: Checklisten, Problemmeldungen und Aktionen, offline nutzbar.",
+  "lang": "de",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e3a46",
+  "theme_color": "#0e3a46",
+  "categories": ["productivity", "business"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
