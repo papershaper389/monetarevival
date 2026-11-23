@@ -1,8 +1,8 @@
 {
-  "name": "Feldcheck – Inspektionen, Probleme, Aktionen",
+  "name": "Feldcheck – Inspections, Issues, Actions",
   "short_name": "Feldcheck",
-  "description": "Prototyp einer Inspektions-App für Anlagen im Feld: Checklisten, Problemmeldungen und Aktionen, offline nutzbar.",
-  "lang": "de",
+  "description": "Inspection app prototype for field assets: checklists, issue reports and actions, usable offline.",
+  "lang": "en",
   "id": "./",
   "start_url": "./",
   "scope": "./",
@@ -10,10 +10,28 @@
   "orientation": "portrait",
   "background_color": "#0e3a46",
   "theme_color": "#0e3a46",
-  "categories": ["productivity", "business"],
+  "categories": [
+    "productivity",
+    "business"
+  ],
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

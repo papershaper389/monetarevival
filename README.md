@@ -10,7 +10,7 @@ Prototyp einer Inspektions-App für Anlagen im Feld (PV, Wind, Umspannwerk, Batt
 - **Sites und Assets** mit offenen Punkten je Anlage
 - **Zufällige Beispieldaten**, unter *Mehr → Neue Zufallsdaten erzeugen* neu auswürfelbar
 
-Alle Daten liegen nur lokal im Browser des Geräts (`localStorage`). Es gibt noch kein Backend und keinen Abgleich zwischen Geräten.
+Die Oberfläche ist auf Englisch. Alle Daten liegen nur lokal im Browser des Geräts (`localStorage`). Es gibt noch kein Backend und keinen Abgleich zwischen Geräten.
 
 ## Aufbau
 

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Feldcheck</title>
-<meta name="description" content="Inspektionen, Probleme und Aktionen im Feld erfassen, auch offline.">
+<meta name="description" content="Capture inspections, issues and actions in the field, even offline.">
 <meta name="theme-color" content="#0e3a46">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
@@ -150,15 +150,15 @@ textarea.in{min-height:96px;resize:vertical}
 <body>
 <div class="wrap">
   <div class="side">
-    <h1>Feldcheck: Prototyp einer Inspektions-App</h1>
-    <p>Prototyp mit den Kernfunktionen einer Inspektions-App. Als PWA installierbar und offline nutzbar.</p>
+    <h1>Feldcheck: inspection app prototype</h1>
+    <p>Prototype with the core features of an inspection app. Installable as a PWA and usable offline.</p>
     <ul>
-      <li><b>Inspektionen</b> aus Vorlagen mit Seiten, Ja/Nein/N.A., Notiz, Foto, Folgeaktion, Live-Bewertung, Unterschrift, Bericht</li>
-      <li><b>Probleme</b> per Freitext und Foto, simulierte KI-Vorausfüllung</li>
-      <li><b>Aktionen</b> mit Typen (PSA-Bestellung, SAP-Meldung) und Zusatzfeldern</li>
-      <li><b>Sites und Assets</b> mit offenen Punkten je Anlage</li>
+      <li><b>Inspections</b> from templates with pages, Yes/No/N/A, notes, photos, follow-up actions, live score, signature, report</li>
+      <li><b>Issues</b> from free text and photos, with simulated AI pre-fill</li>
+      <li><b>Actions</b> with types (PPE order, SAP notification) and custom fields</li>
+      <li><b>Sites and assets</b> with open items per asset</li>
     </ul>
-    <small>Beispieldaten sind zufällig erzeugt und erfunden. Unter Mehr lassen sie sich neu auswürfeln. Daten bleiben nur in diesem Browser.</small>
+    <small>Sample data is randomly generated and fictional. Regenerate it under More. Data stays in this browser only.</small>
   </div>
   <div class="phone" id="app"></div>
 </div>
@@ -181,19 +181,19 @@ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
 const ic=(n)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[n]||''}</svg>`;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const DAY=864e5,now=()=>Date.now();
-const fd=t=>t?new Date(t).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}):'–';
-const fdt=t=>t?new Date(t).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'–';
+const fd=t=>t?new Date(t).toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}):'–';
+const fdt=t=>t?new Date(t).toLocaleString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'–';
 const toLocal=t=>{const d=new Date(t);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
-const ago=t=>{const d=Math.round((now()-t)/DAY);return d<=0?'heute':d===1?'gestern':`vor ${d} Tagen`};
+const ago=t=>{const d=Math.round((now()-t)/DAY);return d<=0?'today':d===1?'yesterday':`${d} days ago`};
 const USER='Gregor Biering';
 
-const titlePage=()=>({title:'Titelseite',items:[{id:'site',t:'site',l:'Standort (Site)',req:1},{id:'asset',t:'asset',l:'Anlage (Asset)'},{id:'date',t:'datetime',l:'Durchgeführt am',req:1},{id:'prep',t:'text',l:'Erstellt von',req:1},{id:'loc',t:'text',l:'Ort / Adresse'}]});
-const closePage=()=>({title:'Abschluss',items:[{id:'rem',t:'textarea',l:'Bemerkungen'},{id:'sig',t:'sig',l:'Unterschrift Prüfer',req:1}]});
+const titlePage=()=>({title:'Title page',items:[{id:'site',t:'site',l:'Site conducted',req:1},{id:'asset',t:'asset',l:'Asset'},{id:'date',t:'datetime',l:'Conducted on',req:1},{id:'prep',t:'text',l:'Prepared by',req:1},{id:'loc',t:'text',l:'Location / address'}]});
+const closePage=()=>({title:'Sign-off',items:[{id:'rem',t:'textarea',l:'Remarks'},{id:'sig',t:'sig',l:'Inspector signature',req:1}]});
 const yn=(id,l,req=1)=>({id,t:'yn',l,req});
 const TPL=[
-{id:'T1',name:'PV-Anlage Sichtprüfung',icon:'sun',pages:[titlePage(),{title:'Module & Unterkonstruktion',items:[yn('m1','Module ohne sichtbare Beschädigung (Glasbruch, Verfärbung)?'),yn('m2','Unterkonstruktion fest, keine Korrosion?'),yn('m3','Keine Verschattung durch Bewuchs?')]},{title:'Elektrik',items:[yn('e1','Strangkabel fixiert, keine Scheuerstellen?'),yn('e2','Wechselrichter ohne Fehlermeldung?'),yn('e3','Kennzeichnung und Warnhinweise vorhanden?'),{id:'e4',t:'number',l:'Isolationswiderstand (MΩ)'},{id:'e5',t:'photo',l:'Foto Wechselrichter-Display'}]},closePage()]},
-{id:'T2',name:'Trafostation Begehung',icon:'asset',pages:[titlePage(),{title:'Zugang & Gebäude',items:[yn('z1','Tür verschlossen, Schloss unbeschädigt?'),yn('z2','Warnschilder (Hochspannung) vollständig?'),yn('z3','Feuerlöscher vorhanden und geprüft?')]},{title:'Technik',items:[yn('k1','Ölstand Transformator im Sollbereich?'),yn('k2','Keine auffälligen Geräusche oder Gerüche?'),{id:'k3',t:'number',l:'Temperaturanzeige (°C)'}]},closePage()]},
-{id:'T3',name:'Sicherheitsrundgang Baustelle',icon:'check',pages:[titlePage(),{title:'Arbeitsplatz',items:[yn('s1','PSA wird von allen Personen getragen?'),yn('s2','Verkehrs- und Fluchtwege frei?'),yn('s3','Erste-Hilfe-Material vollständig?'),yn('s4','Absturzsicherungen vorhanden?',0)]},closePage()]}];
+{id:'T1',name:'PV plant visual inspection',icon:'sun',pages:[titlePage(),{title:'Modules & mounting structure',items:[yn('m1','Modules free of visible damage (glass breakage, discolouration)?'),yn('m2','Mounting structure secure, no corrosion?'),yn('m3','No shading from vegetation?')]},{title:'Electrical',items:[yn('e1','String cables fixed, no chafing?'),yn('e2','Inverter free of error messages?'),yn('e3','Labelling and warning signs present?'),{id:'e4',t:'number',l:'Insulation resistance (MΩ)'},{id:'e5',t:'photo',l:'Photo of inverter display'}]},closePage()]},
+{id:'T2',name:'Transformer station walkdown',icon:'asset',pages:[titlePage(),{title:'Access & building',items:[yn('z1','Door locked, lock undamaged?'),yn('z2','High-voltage warning signs complete?'),yn('z3','Fire extinguisher present and inspected?')]},{title:'Equipment',items:[yn('k1','Transformer oil level within range?'),yn('k2','No unusual noises or smells?'),{id:'k3',t:'number',l:'Temperature reading (°C)'}]},closePage()]},
+{id:'T3',name:'Site safety walk',icon:'check',pages:[titlePage(),{title:'Workplace',items:[yn('s1','Everyone wearing PPE?'),yn('s2','Walkways and escape routes clear?'),yn('s3','First-aid kit complete?'),yn('s4','Fall protection in place?',0)]},closePage()]}];
 const tpl=id=>TPL.find(t=>t.id===id);
 const allItems=t=>t.pages.flatMap(p=>p.items);
 
@@ -201,20 +201,20 @@ function seed(){
  const t=now(),R=Math.random,ri=(a,b)=>a+Math.floor(R()*(b-a+1)),pick=a=>a[Math.floor(R()*a.length)],ch=p=>R()<p;
  const wpick=o=>{let r=R()*Object.values(o).reduce((a,b)=>a+b,0);for(const k in o){r-=o[k];if(r<=0)return k}return Object.keys(o)[0]};
  const PEOPLE=[USER,USER,'Lennart Peters','Priyanka Joshi','Farouk Elguefrei','Lucia Perez','Thibault Cazaurang','Birte Schulz','Emmanuel Mompremier','Jana Wolters','Mehmet Aydın'];
- const SITES=[['Solarpark Schönau A','Feldweg 4, 79677 Schönau','PV','SCH01PV'],['Solarpark Heidesee','Am Heidesee 2, 15754 Heidesee','PV','HDS02PV'],['Windpark Nordfeld','Am Deich 12, 25899 Niebüll','WP','NF01WP'],['Windpark Hohe Geest','Geestweg 7, 27412 Tarmstedt','WP','HG03WP'],['Umspannwerk Ost','Industriestraße 30, 45478 Mülheim','UW','OST01UW'],['Batteriespeicher Lippetal','Hellweg 88, 59510 Lippetal','BESS','LIP01BS']];
+ const SITES=[['Schönau A Solar Park','Feldweg 4, 79677 Schönau, Germany','PV','SCH01PV'],['Heidesee Solar Park','Am Heidesee 2, 15754 Heidesee, Germany','PV','HDS02PV'],['Nordfeld Wind Farm','Am Deich 12, 25899 Niebüll, Germany','WP','NF01WP'],['Hohe Geest Wind Farm','Geestweg 7, 27412 Tarmstedt, Germany','WP','HG03WP'],['East Substation','Industriestraße 30, 45478 Mülheim, Germany','UW','OST01UW'],['Lippetal Battery Storage','Hellweg 88, 59510 Lippetal, Germany','BESS','LIP01BS']];
  const sites=[],assets=[];let an=1;
- const add=(s,type,name,tid)=>assets.push({id:'A'+(an++),type,name,tid,site:s,st:wpick({'In Betrieb':80,'Wartung':10,'Störung':7,'Außer Betrieb':3})});
+ const add=(s,type,name,tid)=>assets.push({id:'A'+(an++),type,name,tid,site:s,st:wpick({'In operation':80,'Maintenance':10,'Fault':7,'Out of service':3})});
  SITES.slice().sort(()=>R()-.5).slice(0,ri(4,6)).forEach(([name,addr,k,code],n)=>{
   const id='S'+(n+1);sites.push({id,name,addr});const pre='DE_'+code.slice(0,3)+'.'+code;
-  if(k==='PV'){add(id,'Trafostation','Transformer Station 01',pre+'.G01');for(let g=1;g<=ri(1,2);g++)add(id,'Wechselrichter','WR-Station '+g,pre+'.G0'+g+'.WR');for(let i=1,m=ri(4,9);i<=m;i++)add(id,'PV-Array','PV Array 1.'+i,pre+'.G01.MQA'+String(i).padStart(2,'0'))}
-  if(k==='WP'){for(let i=1,m=ri(3,8);i<=m;i++)add(id,'WEA','WEA '+String(i).padStart(2,'0'),pre+'.WEA'+String(i).padStart(2,'0'));add(id,'Trafostation','Übergabestation',pre+'.UEB')}
-  if(k==='UW'){for(let i=1,m=ri(2,4);i<=m;i++)add(id,'Trafostation','Trafo T'+i,pre+'.T0'+i);add(id,'Schaltanlage','110-kV-Schaltfeld',pre+'.SF110')}
-  if(k==='BESS'){for(let i=1,m=ri(4,8);i<=m;i++)add(id,'Batteriecontainer','Container '+String(i).padStart(2,'0'),pre+'.BC'+String(i).padStart(2,'0'));add(id,'Trafostation','MS-Trafo',pre+'.T01')}
+  if(k==='PV'){add(id,'Transformer station','Transformer Station 01',pre+'.G01');for(let g=1;g<=ri(1,2);g++)add(id,'Inverter','Inverter station '+g,pre+'.G0'+g+'.WR');for(let i=1,m=ri(4,9);i<=m;i++)add(id,'PV array','PV Array 1.'+i,pre+'.G01.MQA'+String(i).padStart(2,'0'))}
+  if(k==='WP'){for(let i=1,m=ri(3,8);i<=m;i++)add(id,'Wind turbine','WTG '+String(i).padStart(2,'0'),pre+'.WEA'+String(i).padStart(2,'0'));add(id,'Transformer station','Grid connection station',pre+'.UEB')}
+  if(k==='UW'){for(let i=1,m=ri(2,4);i<=m;i++)add(id,'Transformer station','Transformer T'+i,pre+'.T0'+i);add(id,'Switchgear','110 kV switchgear bay',pre+'.SF110')}
+  if(k==='BESS'){for(let i=1,m=ri(4,8);i<=m;i++)add(id,'Battery container','Container '+String(i).padStart(2,'0'),pre+'.BC'+String(i).padStart(2,'0'));add(id,'Transformer station','MV transformer',pre+'.T01')}
  });
- const NOTES={m1:['Glasbruch an Modul {n}, Reihe {r}.','Verfärbung (Snail Trails) an {n} Modulen.','Modulrahmen verbogen nach Sturm.'],m2:['Korrosion an Rammprofil Reihe {r}.','Klemme an Tisch {n} locker.'],m3:['Bewuchs verschattet untere Modulreihe.','Gras höher als 40 cm.'],e1:['Strangkabel scheuert an Kante, Tisch {n}.','Kabelbinder gerissen, Kabel hängt durch.'],e2:['Wechselrichter meldet Isolationsfehler.','Display zeigt Fehler {n}.'],e3:['Warnaufkleber am GAK fehlt.','Beschriftung Strang {n} unleserlich.'],z1:['Schloss schwergängig.','Tür nicht verschlossen vorgefunden.'],z2:['Schild an Nordtür verblasst.','Hochspannungsschild fehlt.'],z3:['Prüfplakette Feuerlöscher abgelaufen.','Feuerlöscher fehlt.'],k1:['Ölstand unter Minimum.','Ölspuren an Wanne.'],k2:['Brummen lauter als üblich.','Leichter Brandgeruch.'],s1:['{n} Personen ohne Schutzhelm.','Warnweste fehlt bei Fremdfirma.'],s2:['Fluchtweg durch Material blockiert.','Verkehrsweg nicht gekennzeichnet.'],s3:['Verbandkasten abgelaufen.','Augenspülflasche fehlt.'],s4:['Absturzsicherung an Kante fehlt.']};
+ const NOTES={m1:['Broken glass on module {n}, row {r}.','Discolouration (snail trails) on {n} modules.','Module frame bent after storm.'],m2:['Corrosion on ram post, row {r}.','Loose clamp on table {n}.'],m3:['Vegetation shading bottom module row.','Grass taller than 40 cm.'],e1:['String cable chafing on edge, table {n}.','Cable tie broken, cable sagging.'],e2:['Inverter reports insulation fault.','Display shows error {n}.'],e3:['Warning sticker missing on combiner box.','Label for string {n} illegible.'],z1:['Lock stiff.','Door found unlocked.'],z2:['Sign on north door faded.','High-voltage sign missing.'],z3:['Extinguisher inspection tag expired.','Fire extinguisher missing.'],k1:['Oil level below minimum.','Oil traces in bund.'],k2:['Hum louder than usual.','Slight burning smell.'],s1:['{n} people without hard hat.','Contractor missing hi-vis vest.'],s2:['Escape route blocked by material.','Walkway not marked.'],s3:['First-aid kit expired.','Eyewash bottle missing.'],s4:['No edge fall protection.']};
  const fill=s=>s.replace('{n}',ri(2,24)).replace('{r}',pick('ABCDEF'));
- const tplFor=s=>{const ty=new Set(assets.filter(a=>a.site===s).map(a=>a.type));const o=['T3','T3'];if(ty.has('PV-Array'))o.push('T1','T1','T1');if(ty.has('Trafostation'))o.push('T2','T2');return pick(o)};
- const assetFor=(tid,s)=>{const L=assets.filter(a=>a.site===s&&(tid==='T1'?a.type==='PV-Array':tid==='T2'?a.type==='Trafostation':true));return tid==='T3'&&ch(.5)?'':(pick(L)?.id||'')};
+ const tplFor=s=>{const ty=new Set(assets.filter(a=>a.site===s).map(a=>a.type));const o=['T3','T3'];if(ty.has('PV array'))o.push('T1','T1','T1');if(ty.has('Transformer station'))o.push('T2','T2');return pick(o)};
+ const assetFor=(tid,s)=>{const L=assets.filter(a=>a.site===s&&(tid==='T1'?a.type==='PV array':tid==='T2'?a.type==='Transformer station':true));return tid==='T3'&&ch(.5)?'':(pick(L)?.id||'')};
  const ins=[];let iN=1;
  for(let k=0,m=ri(18,30);k<m;k++){
   const s=pick(sites).id,tid=tplFor(s),T=tpl(tid),done=ch(.78),st0=t-(done?ri(0,120):ri(0,14))*DAY-ri(0,600)*6e4,by=pick(PEOPLE),d=ri(40,1500)*1e3;
@@ -223,30 +223,30 @@ function seed(){
   T.pages.forEach((p,pi)=>{if(pi===0||pi>cut)return;for(const it of p.items){
    if(it.t==='yn'){const v=wpick({y:78,n:14,na:8});ans[it.id]={v};if(v==='n'&&NOTES[it.id]&&ch(.85))ans[it.id].note=fill(pick(NOTES[it.id]))}
    else if(it.id==='e4')ans[it.id]={v:String(ri(2,120))};else if(it.id==='k3')ans[it.id]={v:String(ri(28,78))};
-   else if(it.id==='rem'&&ch(.4))ans[it.id]={v:pick(['Keine weiteren Auffälligkeiten.','Nachkontrolle in 4 Wochen empfohlen.','Zugang wegen Schnee nur eingeschränkt.','Fremdfirma vor Ort, Arbeiten laufen.','Wetter: Regen, Sicht gut.'])};
+   else if(it.id==='rem'&&ch(.4))ans[it.id]={v:pick(['No further findings.','Follow-up check recommended in 4 weeks.','Access limited due to snow.','Contractor on site, work in progress.','Weather: rain, good visibility.'])};
    else if(it.t==='sig')ans[it.id]={v:''};}});
   ins.push({id:'I'+(iN++),tpl:tid,st:done?'done':'prog',by,start:st0,upd:st0+d,done:done?st0+d:undefined,ans});
  }
  ins.sort((a,b)=>a.start-b.start);
- const ISS=[['Vorfall','Fahrzeug bei Schnee in Graben gerutscht','Hoch'],['Vorfall','Mitarbeiter auf nasser Leiter ausgerutscht','Hoch'],['Beinaheunfall','Werkzeug von Gondel gefallen, niemand getroffen','Hoch'],['Beinaheunfall','Fremdfahrzeug fährt ohne Einweisung aufs Gelände','Mittel'],['Gefährdung','Zaun an Südseite beschädigt, Zugang offen','Mittel'],['Gefährdung','Kabelgraben nicht abgesichert','Hoch'],['Gefährdung','Eisansatz an Rotorblättern','Hoch'],['Umwelt','Ölspuren unter Trafowanne','Mittel'],['Umwelt','Hydraulikleck an Kran','Mittel'],['Technischer Mangel','Kommunikationsausfall SCADA-Router','Mittel'],['Technischer Mangel','Lüfter Batteriecontainer defekt','Hoch'],['Technischer Mangel','Kamera am Tor ohne Bild','Niedrig'],['Feedback','Parkplatz bei Regen schlecht befahrbar','Niedrig'],['Feedback','Schlüsselkasten schwer erreichbar','Niedrig']];
+ const ISS=[['Incident','Vehicle slipped on snow into ditch','High'],['Incident','Technician slipped on wet ladder','High'],['Near miss','Tool dropped from nacelle, nobody hit','High'],['Near miss','Contractor vehicle entered site without induction','Medium'],['Hazard','Fence damaged on south side, site open','Medium'],['Hazard','Cable trench not secured','High'],['Hazard','Ice build-up on rotor blades','High'],['Environment','Oil traces under transformer bund','Medium'],['Environment','Hydraulic leak on crane','Medium'],['Technical defect','SCADA router communication loss','Medium'],['Technical defect','Battery container fan faulty','High'],['Technical defect','Gate camera shows no image','Low'],['Feedback','Car park hard to access in rain','Low'],['Feedback','Key safe hard to reach','Low']];
  const issues=[];let isN=1;
- const mkIss=(cat,title,prio,s,a,at,insId,desc)=>{const st=wpick({'Offen':40,'In Bearbeitung':25,'Gelöst':35}),by=pick(PEOPLE),log=[{t:at,w:by,x:'Problem erstellt'}];if(st!=='Offen')log.push({t:at+ri(1,10)*DAY,w:pick(PEOPLE),x:'Status: '+st});if(ch(.4))log.push({t:at+ri(1,5)*DAY,w:pick(PEOPLE),x:'Kommentar: '+pick(['Ersatzteil ist bestellt.','Fremdfirma informiert.','Vor Ort geprüft, Foto folgt.','Bitte bis Freitag klären.'])});const id='IS-'+(isN++);issues.push({id,cat,title,desc:desc||'',st,prio,site:s,asset:a,at,media:[],by,ins:insId,log});return id};
- for(const i of ins)for(const it of allItems(tpl(i.tpl)))if(i.ans[it.id]?.v==='n'&&ch(.3))mkIss(i.tpl==='T3'?'Gefährdung':'Technischer Mangel',(i.ans[it.id].note||it.l).replace(/\.$/,''),pick(['Mittel','Hoch']),i.ans.site.v,i.ans.asset.v,i.start+6e5,i.id,'Aus Inspektion '+i.id+'.');
- for(let k=0,m=ri(5,10);k<m;k++){const [c,ti,p]=pick(ISS),s=pick(sites).id,a=ch(.6)?(pick(assets.filter(x=>x.site===s))?.id||''):'';mkIss(c,ti,p,s,a,t-ri(0,200)*DAY,'',pick(['Beim Rundgang festgestellt.','Von Fremdfirma gemeldet.','Siehe Fotos in der Akte.','']))}
+ const mkIss=(cat,title,prio,s,a,at,insId,desc)=>{const st=wpick({'Open':40,'In progress':25,'Resolved':35}),by=pick(PEOPLE),log=[{t:at,w:by,x:'Issue created'}];if(st!=='Open')log.push({t:at+ri(1,10)*DAY,w:pick(PEOPLE),x:'Status: '+st});if(ch(.4))log.push({t:at+ri(1,5)*DAY,w:pick(PEOPLE),x:'Comment: '+pick(['Spare part ordered.','Contractor informed.','Checked on site, photo to follow.','Please resolve by Friday.'])});const id='IS-'+(isN++);issues.push({id,cat,title,desc:desc||'',st,prio,site:s,asset:a,at,media:[],by,ins:insId,log});return id};
+ for(const i of ins)for(const it of allItems(tpl(i.tpl)))if(i.ans[it.id]?.v==='n'&&ch(.3))mkIss(i.tpl==='T3'?'Hazard':'Technical defect',(i.ans[it.id].note||it.l).replace(/\.$/,''),pick(['Medium','High']),i.ans.site.v,i.ans.asset.v,i.start+6e5,i.id,'From inspection '+i.id+'.');
+ for(let k=0,m=ri(5,10);k<m;k++){const [c,ti,p]=pick(ISS),s=pick(sites).id,a=ch(.6)?(pick(assets.filter(x=>x.site===s))?.id||''):'';mkIss(c,ti,p,s,a,t-ri(0,200)*DAY,'',pick(['Found during site walk.','Reported by contractor.','See photos in the record.','']))}
  issues.sort((a,b)=>a.at-b.at);
- const ACT=[['Aktion','Zaun reparieren',{}],['Aktion','Bewuchs mähen lassen',{}],['Aktion','Warnschild erneuern',{}],['Aktion','Fluchtweg freiräumen',{}],['Aktion','Unterweisung Fremdfirma wiederholen',{}],['Aktion','Feuerlöscher prüfen lassen',{}],['PSA-Bestellung','Schutzhandschuhe Klasse 0',{size:()=>pick(['M','L','XL']),qty:()=>String(ri(2,20))}],['PSA-Bestellung','Auffanggurt mit Falldämpfer',{size:()=>pick(['M/L','L/XL']),qty:()=>String(ri(1,4))}],['PSA-Bestellung','Warnwesten Klasse 2',{size:()=>pick(['L','XL','XXL']),qty:()=>String(ri(5,30))}],['PSA-Bestellung','Störlichtbogen-Gesichtsschutz',{size:()=>'Universal',qty:()=>String(ri(1,6))}],['SAP-Meldung','Modul tauschen',{art:()=>'M2 Störmeldung'}],['SAP-Meldung','Wechselrichter-Service beauftragen',{art:()=>'M1 Instandhaltung'}],['SAP-Meldung','Ölstand Trafo nachfüllen',{art:()=>'M2 Störmeldung'}],['SAP-Meldung','Lüfter Batteriecontainer tauschen',{art:()=>'M2 Störmeldung'}]];
+ const ACT=[['Action','Repair fence',{}],['Action','Arrange vegetation mowing',{}],['Action','Replace warning sign',{}],['Action','Clear escape route',{}],['Action','Repeat contractor induction',{}],['Action','Have fire extinguisher inspected',{}],['PPE order','Class 0 insulating gloves',{size:()=>pick(['M','L','XL']),qty:()=>String(ri(2,20))}],['PPE order','Full-body harness with shock absorber',{size:()=>pick(['M/L','L/XL']),qty:()=>String(ri(1,4))}],['PPE order','Class 2 hi-vis vests',{size:()=>pick(['L','XL','XXL']),qty:()=>String(ri(5,30))}],['PPE order','Arc flash face shield',{size:()=>'Universal',qty:()=>String(ri(1,6))}],['SAP notification','Replace module',{art:()=>'M2 Malfunction report'}],['SAP notification','Order inverter service',{art:()=>'M1 Maintenance request'}],['SAP notification','Top up transformer oil',{art:()=>'M2 Malfunction report'}],['SAP notification','Replace battery container fan',{art:()=>'M2 Malfunction report'}]];
  const actions=[];let aN=101;
- const mkAct=(type,title,cfg,s,a,src)=>{const due=t+ri(-25,35)*DAY,past=due<t,st=wpick(past?{'Offen':35,'In Bearbeitung':20,'Erledigt':45}:{'Offen':55,'In Bearbeitung':30,'Erledigt':15}),cf={};for(const k in cfg)cf[k]=cfg[k]();if(type==='SAP-Meldung')cf.eq=asset(a)?.tid||'';actions.push({id:'AC-'+(aN++),type,title,desc:'',prio:wpick({'Niedrig':30,'Mittel':45,'Hoch':25}),due:toLocal(due).slice(0,10),who:ch(.45)?USER:pick(PEOPLE),site:s,asset:a,st,cf,src})};
+ const mkAct=(type,title,cfg,s,a,src)=>{const due=t+ri(-25,35)*DAY,past=due<t,st=wpick(past?{'Open':35,'In progress':20,'Done':45}:{'Open':55,'In progress':30,'Done':15}),cf={};for(const k in cfg)cf[k]=cfg[k]();if(type==='SAP notification')cf.eq=asset(a)?.tid||'';actions.push({id:'AC-'+(aN++),type,title,desc:'',prio:wpick({'Low':30,'Medium':45,'High':25}),due:toLocal(due).slice(0,10),who:ch(.45)?USER:pick(PEOPLE),site:s,asset:a,st,cf,src})};
  const asset=id=>assets.find(x=>x.id===id);
- for(const x of issues)if(x.cat!=='Feedback'&&ch(.6))mkAct(ch(.5)?'SAP-Meldung':'Aktion',(x.asset?'Mangel beheben: ':'Klären: ')+x.title,x.asset?{art:()=>'M2 Störmeldung'}:{},x.site,x.asset,x.id);
+ for(const x of issues)if(x.cat!=='Feedback'&&ch(.6))mkAct(ch(.5)?'SAP notification':'Action',(x.asset?'Fix defect: ':'Clarify: ')+x.title,x.asset?{art:()=>'M2 Malfunction report'}:{},x.site,x.asset,x.id);
  for(let k=0,m=ri(10,18);k<m;k++){const [ty,ti,cfg]=pick(ACT),s=pick(sites).id,a=ch(.5)?(pick(assets.filter(x=>x.site===s))?.id||''):'';mkAct(ty,ti+(a?' ('+asset(a).name+')':''),cfg,s,a,'')}
- return {v:2,sites,assets,ins,issues,actions,n:{I:iN,IS:isN,AC:aN}};
+ return {v:3,sites,assets,ins,issues,actions,n:{I:iN,IS:isN,AC:aN}};
 }
 let S;
 try{S=JSON.parse(localStorage.getItem('feldcheck.v1'))}catch(e){}
-if(!S||S.v!==2)S=seed();
+if(!S||S.v!==3)S=seed();
 let warned=false;
-const save=()=>{try{localStorage.setItem('feldcheck.v1',JSON.stringify(S))}catch(e){if(!warned){warned=true;toast('Speicher voll: Fotos nur bis Neuladen')}}};
+const save=()=>{try{localStorage.setItem('feldcheck.v1',JSON.stringify(S))}catch(e){if(!warned){warned=true;toast('Storage full: photos kept until reload only')}}};
 
 const U={tab:'start',stack:[],sheet:null,dlg:null,iseg:'list',ist:'all',site:'',aseg:'mine',isf:'open',page:0,miss:[],draft:null,idraft:null,itab:'ov',atab:'open',q:''};
 const site=id=>S.sites.find(s=>s.id===id);
@@ -256,198 +256,198 @@ const aname=id=>asset(id)?.name||'';
 const top=()=>U.stack[U.stack.length-1];
 const push=(v,id)=>{U.stack.push({v,id});if(v==='conduct'){U.page=0;U.miss=[]}render(true)};
 const pop=()=>{U.stack.pop();render(true)};
-const overdue=a=>a.st!=='Erledigt'&&a.due&&new Date(a.due+'T23:59')<new Date();
-const stPill=s=>{const c={prog:'p-prog',done:'p-done','Offen':'p-open','In Bearbeitung':'p-prog','Gelöst':'p-done','Erledigt':'p-done'}[s]||'';const l={prog:'Im Gange',done:'Abgeschlossen'}[s]||s;return `<span class="pill ${c}">${esc(l)}</span>`};
-const prPill=p=>`<span class="pill ${p==='Hoch'?'p-hi':p==='Mittel'?'p-mid':''}">${esc(p)}</span>`;
+const overdue=a=>a.st!=='Done'&&a.due&&new Date(a.due+'T23:59')<new Date();
+const stPill=s=>{const c={prog:'p-prog',done:'p-done','Open':'p-open','In progress':'p-prog','Resolved':'p-done','Done':'p-done'}[s]||'';const l={prog:'In progress',done:'Completed'}[s]||s;return `<span class="pill ${c}">${esc(l)}</span>`};
+const prPill=p=>`<span class="pill ${p==='High'?'p-hi':p==='Medium'?'p-mid':''}">${esc(p)}</span>`;
 
 function score(i){const t=tpl(i.tpl);let y=0,n=0,fl=0;for(const it of allItems(t))if(it.t==='yn'){const v=i.ans[it.id]?.v;if(v==='y')y++;if(v==='n'){n++;fl++}}return {y,tot:y+n,fl,pct:y+n?Math.round(y/(y+n)*1000)/10:0}}
 const insTitle=i=>`${fd(i.ans.date?.v||i.start)} / ${i.ans.prep?.v||i.by}`;
 const missing=i=>allItems(tpl(i.tpl)).filter(it=>it.req&&!(i.ans[it.id]?.v));
 
 /* ---------- header + tab views ---------- */
-const hdMain=t=>`<div class="hd"><div class="logo">FC</div><h2>${t}</h2><button class="ib" data-a="toast" data-x="Keine neuen Benachrichtigungen" aria-label="Benachrichtigungen">${ic('bell')}</button></div>`;
-const hdSub=(t,right='')=>`<div class="hd"><button class="ib" data-a="back" aria-label="Zurück">${ic('back')}</button><div class="t">${esc(t)}</div>${right||'<span class="ib"></span>'}</div>`;
+const hdMain=t=>`<div class="hd"><div class="logo">FC</div><h2>${t}</h2><button class="ib" data-a="toast" data-x="No new notifications" aria-label="Notifications">${ic('bell')}</button></div>`;
+const hdSub=(t,right='')=>`<div class="hd"><button class="ib" data-a="back" aria-label="Back">${ic('back')}</button><div class="t">${esc(t)}</div>${right||'<span class="ib"></span>'}</div>`;
 
 function vStart(){
- const mine=S.actions.filter(a=>a.who===USER&&a.st!=='Erledigt');
+ const mine=S.actions.filter(a=>a.who===USER&&a.st!=='Done');
  const od=mine.filter(overdue);
  const prog=S.ins.filter(i=>i.st==='prog'&&i.by===USER);
  const due=mine.slice().sort((a,b)=>a.due.localeCompare(b.due));
  let h=hdMain('Agenda')+`<div class="scr"><div class="kpis">
- <button class="kpi" data-a="goAct" data-x="mine"><b>${mine.length}</b><span>Meine Aktionen</span></button>
- <button class="kpi ${od.length?'alert':''}" data-a="goAct" data-x="over"><b>${od.length}</b><span>Überfällig</span></button>
- <button class="kpi" data-a="goIns"><b>${prog.length}</b><span>Meine im Gange</span></button></div>`;
- if(!due.length&&!prog.length)h+=`<div class="empty">${ic('check')}<b>Alles erledigt!</b>Die Ihnen zugewiesenen Elemente werden hier angezeigt.</div>`;
- if(prog.length)h+=`<div class="kick">Inspektionen fortsetzen</div>`+prog.map(rowIns).join('');
- if(due.length)h+=`<div class="kick">Meine offenen Aktionen</div>`+due.map(rowAct).join('');
+ <button class="kpi" data-a="goAct" data-x="mine"><b>${mine.length}</b><span>My actions</span></button>
+ <button class="kpi ${od.length?'alert':''}" data-a="goAct" data-x="over"><b>${od.length}</b><span>Overdue</span></button>
+ <button class="kpi" data-a="goIns"><b>${prog.length}</b><span>My in progress</span></button></div>`;
+ if(!due.length&&!prog.length)h+=`<div class="empty">${ic('check')}<b>All done!</b>Items assigned to you will appear here.</div>`;
+ if(prog.length)h+=`<div class="kick">Continue inspections</div>`+prog.map(rowIns).join('');
+ if(due.length)h+=`<div class="kick">My open actions</div>`+due.map(rowAct).join('');
  return h+`</div>`;
 }
 function rowIns(i){const t=tpl(i.tpl);return `<button class="row" data-a="openIns" data-x="${i.id}"><span class="ico">${ic(t.icon)}</span><span class="m"><b>${esc(insTitle(i))}</b><small>${esc(t.name)} · ${esc(sname(i.ans.site?.v))}</small></span>${stPill(i.st)}</button>`}
-function rowAct(a){return `<button class="row" data-a="editAct" data-x="${a.id}"><span class="ico">${ic('act')}</span><span class="m"><b>${esc(a.title)}</b><small>${esc(a.id)} · ${esc(a.type)} · fällig ${fd(a.due)}${overdue(a)?' · <span style="color:var(--red);font-weight:600">überfällig</span>':''}</small></span>${stPill(a.st)}</button>`}
+function rowAct(a){return `<button class="row" data-a="editAct" data-x="${a.id}"><span class="ico">${ic('act')}</span><span class="m"><b>${esc(a.title)}</b><small>${esc(a.id)} · ${esc(a.type)} · due ${fd(a.due)}${overdue(a)?' · <span style="color:var(--red);font-weight:600">overdue</span>':''}</small></span>${stPill(a.st)}</button>`}
 function rowIss(x){return `<button class="row" data-a="openIss" data-x="${x.id}"><span class="ico">${ic('alert')}</span><span class="m"><b>${esc(x.title)}</b><small>${esc(x.cat)} · ${esc(x.id)} · ${esc(sname(x.site))} · ${ago(x.at)}</small></span>${stPill(x.st)}</button>`}
 
-function siteChips(){return `<div class="chips"><button class="chip ${U.site?'on':''}" data-a="sheet" data-x="sites">${U.site?'Site: '+esc(sname(U.site))+' ✕':'Alle Sites ▾'}</button></div>`}
+function siteChips(){return `<div class="chips"><button class="chip ${U.site?'on':''}" data-a="sheet" data-x="sites">${U.site?'Site: '+esc(sname(U.site))+' ✕':'All sites ▾'}</button></div>`}
 function vIns(){
- let h=hdMain('Inspektionen')+`<div class="scr"><div class="seg"><button class="${U.iseg==='tpl'?'on':''}" data-a="iseg" data-x="tpl">Vorlagen</button><button class="${U.iseg==='list'?'on':''}" data-a="iseg" data-x="list">Inspektionen</button></div>`;
- if(U.iseg==='tpl')return h+`<div class="kick">Vorlage wählen und Inspektion beginnen</div>`+TPL.map(t=>`<button class="row" data-a="startIns" data-x="${t.id}"><span class="ico">${ic(t.icon)}</span><span class="m"><b>${esc(t.name)}</b><small>${t.pages.length} Seiten · ${allItems(t).filter(i=>i.t==='yn').length} Prüfpunkte</small></span></button>`).join('')+`</div>`;
- h+=siteChips()+`<div class="chips">${[['all','Alle'],['prog','Im Gange'],['done','Abgeschlossen']].map(([k,l])=>`<button class="chip ${U.ist===k?'on':''}" data-a="ist" data-x="${k}">${l}</button>`).join('')}</div>`;
+ let h=hdMain('Inspections')+`<div class="scr"><div class="seg"><button class="${U.iseg==='tpl'?'on':''}" data-a="iseg" data-x="tpl">Templates</button><button class="${U.iseg==='list'?'on':''}" data-a="iseg" data-x="list">Inspections</button></div>`;
+ if(U.iseg==='tpl')return h+`<div class="kick">Choose a template to start an inspection</div>`+TPL.map(t=>`<button class="row" data-a="startIns" data-x="${t.id}"><span class="ico">${ic(t.icon)}</span><span class="m"><b>${esc(t.name)}</b><small>${t.pages.length} pages · ${allItems(t).filter(i=>i.t==='yn').length} checkpoints</small></span></button>`).join('')+`</div>`;
+ h+=siteChips()+`<div class="chips">${[['all','All'],['prog','In progress'],['done','Completed']].map(([k,l])=>`<button class="chip ${U.ist===k?'on':''}" data-a="ist" data-x="${k}">${l}</button>`).join('')}</div>`;
  const L=S.ins.filter(i=>(!U.site||i.ans.site?.v===U.site)&&(U.ist==='all'||i.st===U.ist)).sort((a,b)=>b.upd-a.upd);
- return h+(L.length?L.map(rowIns).join(''):`<div class="empty">${ic('clip')}<b>Keine Inspektionen</b>Filter ändern oder eine Vorlage starten.</div>`)+`</div>`;
+ return h+(L.length?L.map(rowIns).join(''):`<div class="empty">${ic('clip')}<b>No inspections</b>Change the filter or start a template.</div>`)+`</div>`;
 }
 function vIss(){
- let h=hdMain('Probleme')+`<div class="scr"><div class="seg"><button class="${U.isf==='open'?'on':''}" data-a="isf" data-x="open">Offen</button><button class="${U.isf==='all'?'on':''}" data-a="isf" data-x="all">Alle</button></div>`+siteChips();
- const L=S.issues.filter(x=>(U.isf==='all'||x.st!=='Gelöst')&&(!U.site||x.site===U.site)).sort((a,b)=>b.at-a.at);
- return h+(L.length?L.map(rowIss).join(''):`<div class="empty">${ic('alert')}<b>Keine offenen Probleme</b>Vorfälle, Gefahren oder Feedback über + melden.</div>`)+`</div>`;
+ let h=hdMain('Issues')+`<div class="scr"><div class="seg"><button class="${U.isf==='open'?'on':''}" data-a="isf" data-x="open">Open</button><button class="${U.isf==='all'?'on':''}" data-a="isf" data-x="all">All</button></div>`+siteChips();
+ const L=S.issues.filter(x=>(U.isf==='all'||x.st!=='Resolved')&&(!U.site||x.site===U.site)).sort((a,b)=>b.at-a.at);
+ return h+(L.length?L.map(rowIss).join(''):`<div class="empty">${ic('alert')}<b>No open issues</b>Report incidents, hazards or feedback with +.</div>`)+`</div>`;
 }
 function vAct(){
- let h=hdMain('Aktionen')+`<div class="scr"><div class="seg">${[['mine','Mir zugewiesen'],['over','Überfällig'],['all','Alle']].map(([k,l])=>`<button class="${U.aseg===k?'on':''}" data-a="aseg" data-x="${k}">${l}</button>`).join('')}</div>`+siteChips();
+ let h=hdMain('Actions')+`<div class="scr"><div class="seg">${[['mine','Assigned to me'],['over','Overdue'],['all','All']].map(([k,l])=>`<button class="${U.aseg===k?'on':''}" data-a="aseg" data-x="${k}">${l}</button>`).join('')}</div>`+siteChips();
  let L=S.actions.filter(a=>!U.site||a.site===U.site);
- if(U.aseg==='mine')L=L.filter(a=>a.who===USER&&a.st!=='Erledigt');
+ if(U.aseg==='mine')L=L.filter(a=>a.who===USER&&a.st!=='Done');
  if(U.aseg==='over')L=L.filter(overdue);
- L.sort((a,b)=>(a.st==='Erledigt')-(b.st==='Erledigt')||a.due.localeCompare(b.due));
- return h+(L.length?L.map(rowAct).join(''):`<div class="empty">${ic('act')}<b>Aufgaben im Team verfolgen</b>Aktionen aus Inspektionen, Assets oder Problemen erscheinen hier.</div>`)+`</div>`;
+ L.sort((a,b)=>(a.st==='Done')-(b.st==='Done')||a.due.localeCompare(b.due));
+ return h+(L.length?L.map(rowAct).join(''):`<div class="empty">${ic('act')}<b>Track team tasks</b>Actions from inspections, assets or issues appear here.</div>`)+`</div>`;
 }
-function installRow(){if(standalone())return '';if(!installEvt&&!isIOS)return '';return `<button class="row" data-a="install"><span class="ico">${ic('act')}</span><span class="m"><b>App installieren</b><small>Auf den Home-Bildschirm, startet offline</small></span></button>`}
+function installRow(){if(standalone())return '';if(!installEvt&&!isIOS)return '';return `<button class="row" data-a="install"><span class="ico">${ic('act')}</span><span class="m"><b>Install app</b><small>Add to home screen, starts offline</small></span></button>`}
 function vMore(){
- const m=[['assets','asset','Assets',S.assets.length+' Anlagen'],['sitesV','pin','Sites',S.sites.length+' Standorte, Mitglied in allen'],['tplV','doc','Vorlagen',TPL.length+' Vorlagen (Bearbeitung im Web-Admin)']];
- return hdMain('Mehr')+`<div class="scr">`+m.map(([v,i,t,s])=>`<button class="row" data-a="push" data-x="${v}"><span class="ico">${ic(i)}</span><span class="m"><b>${t}</b><small>${s}</small></span></button>`).join('')+
- installRow()+`<div class="kick">Daten</div><button class="row" data-a="export"><span class="ico">${ic('doc')}</span><span class="m"><b>Daten als JSON kopieren</b><small>Für Analyse oder Import</small></span></button><button class="row" data-a="dlg" data-x="reset"><span class="ico">${ic('x')}</span><span class="m"><b>Neue Zufallsdaten erzeugen</b><small>Ersetzt alle lokalen Daten</small></span></button><p class="local">Angemeldet als ${USER} · lokal gespeichert, offline nutzbar</p></div>`;
+ const m=[['assets','asset','Assets',S.assets.length+' assets'],['sitesV','pin','Sites',S.sites.length+' sites, member of all'],['tplV','doc','Templates',TPL.length+' templates (edited in web admin)']];
+ return hdMain('More')+`<div class="scr">`+m.map(([v,i,t,s])=>`<button class="row" data-a="push" data-x="${v}"><span class="ico">${ic(i)}</span><span class="m"><b>${t}</b><small>${s}</small></span></button>`).join('')+
+ installRow()+`<div class="kick">Data</div><button class="row" data-a="export"><span class="ico">${ic('doc')}</span><span class="m"><b>Copy data as JSON</b><small>For analysis or import</small></span></button><button class="row" data-a="dlg" data-x="reset"><span class="ico">${ic('x')}</span><span class="m"><b>Generate new random data</b><small>Replaces all local data</small></span></button><p class="local">Signed in as ${USER} · stored locally, works offline</p></div>`;
 }
 
 /* ---------- stack screens ---------- */
 function sInsDetail(id){
  const i=S.ins.find(x=>x.id===id),t=tpl(i.tpl),sc=score(i);
  const links=S.actions.filter(a=>a.src===id),iss=S.issues.filter(x=>x.ins===id);
- return hdSub('Inspektion',`<button class="ib" data-a="dlg" data-x="delIns" aria-label="Löschen">${ic('x')}</button>`)+`<div class="scr"><div class="big">${esc(insTitle(i))}</div>${stPill(i.st)}
- <div style="margin:16px 0">${i.st==='done'?`<button class="btn" data-a="push" data-x="report">Bericht anzeigen</button>`:`<button class="btn" data-a="conduct">Fortfahren</button>`}</div>
- <div class="card"><dl class="meta"><dt>Vorlage</dt><dd>${esc(t.name)}</dd><dt>Site</dt><dd>${esc(sname(i.ans.site?.v))}</dd><dt>Asset</dt><dd>${esc(aname(i.ans.asset?.v)||'–')}</dd><dt>Bewertung</dt><dd>${sc.y}/${sc.tot} (${sc.pct.toLocaleString('de-DE')} %)${sc.fl?` · <b style="color:var(--red)">${sc.fl} markiert</b>`:''}</dd><dt>Dauer</dt><dd>${dur(i)}</dd><dt>Standort</dt><dd>${esc(i.ans.loc?.v||'–')}</dd><dt>Gestartet von</dt><dd>${esc(i.by)}<span class="sub">${fdt(i.start)}</span></dd><dt>Zuletzt bearbeitet</dt><dd>${fdt(i.upd)}</dd><dt>Synchronisiert</dt><dd>lokal</dd></dl></div>
- ${links.length?`<div class="kick">Aktionen aus dieser Inspektion</div>`+links.map(rowAct).join(''):''}${iss.length?`<div class="kick">Verknüpfte Probleme</div>`+iss.map(rowIss).join(''):''}</div>`;
+ return hdSub('Inspection',`<button class="ib" data-a="dlg" data-x="delIns" aria-label="Delete">${ic('x')}</button>`)+`<div class="scr"><div class="big">${esc(insTitle(i))}</div>${stPill(i.st)}
+ <div style="margin:16px 0">${i.st==='done'?`<button class="btn" data-a="push" data-x="report">View report</button>`:`<button class="btn" data-a="conduct">Continue</button>`}</div>
+ <div class="card"><dl class="meta"><dt>Template</dt><dd>${esc(t.name)}</dd><dt>Site</dt><dd>${esc(sname(i.ans.site?.v))}</dd><dt>Asset</dt><dd>${esc(aname(i.ans.asset?.v)||'–')}</dd><dt>Score</dt><dd>${sc.y}/${sc.tot} (${sc.pct.toLocaleString('en-GB')}%)${sc.fl?` · <b style="color:var(--red)">${sc.fl} flagged</b>`:''}</dd><dt>Duration</dt><dd>${dur(i)}</dd><dt>Location</dt><dd>${esc(i.ans.loc?.v||'–')}</dd><dt>Started by</dt><dd>${esc(i.by)}<span class="sub">${fdt(i.start)}</span></dd><dt>Last edited</dt><dd>${fdt(i.upd)}</dd><dt>Synced</dt><dd>local</dd></dl></div>
+ ${links.length?`<div class="kick">Actions from this inspection</div>`+links.map(rowAct).join(''):''}${iss.length?`<div class="kick">Linked issues</div>`+iss.map(rowIss).join(''):''}</div>`;
 }
 const dur=i=>{const s=Math.round(((i.done||i.upd)-i.start)/1000);return s<60?s+' s':Math.floor(s/60)+' min '+(s%60)+' s'};
 
 function field(i,it){
  const a=i.ans[it.id]||{},v=a.v||'',r=it.req?' <span class="req">*</span>':'';
  let inner='';
- if(it.t==='yn')inner=`<div class="yn">${[['y','Ja'],['n','Nein'],['na','N.A.']].map(([k,l])=>`<button class="${v===k?'on '+k:''}" data-a="yn" data-x="${it.id}:${k}">${l}</button>`).join('')}</div>`;
- else if(it.t==='site')inner=`<select class="in" data-ans="${it.id}" id="f-${it.id}"><option value="">Site wählen</option>${S.sites.map(s=>`<option value="${s.id}" ${v===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select>`;
- else if(it.t==='asset'){const L=S.assets.filter(x=>!i.ans.site?.v||x.site===i.ans.site.v);inner=`<select class="in" data-ans="${it.id}" id="f-${it.id}"><option value="">Kein Asset</option>${L.map(s=>`<option value="${s.id}" ${v===s.id?'selected':''}>${esc(s.name)} · ${esc(s.tid)}</option>`).join('')}</select>`}
+ if(it.t==='yn')inner=`<div class="yn">${[['y','Yes'],['n','No'],['na','N/A']].map(([k,l])=>`<button class="${v===k?'on '+k:''}" data-a="yn" data-x="${it.id}:${k}">${l}</button>`).join('')}</div>`;
+ else if(it.t==='site')inner=`<select class="in" data-ans="${it.id}" id="f-${it.id}"><option value="">Choose site</option>${S.sites.map(s=>`<option value="${s.id}" ${v===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select>`;
+ else if(it.t==='asset'){const L=S.assets.filter(x=>!i.ans.site?.v||x.site===i.ans.site.v);inner=`<select class="in" data-ans="${it.id}" id="f-${it.id}"><option value="">No asset</option>${L.map(s=>`<option value="${s.id}" ${v===s.id?'selected':''}>${esc(s.name)} · ${esc(s.tid)}</option>`).join('')}</select>`}
  else if(it.t==='datetime')inner=`<input class="in" type="datetime-local" data-ans="${it.id}" id="f-${it.id}" value="${esc(v)}">`;
  else if(it.t==='number')inner=`<input class="in" type="number" inputmode="decimal" data-ans="${it.id}" id="f-${it.id}" value="${esc(v)}">`;
  else if(it.t==='textarea')inner=`<textarea class="in" data-ans="${it.id}" id="f-${it.id}">${esc(v)}</textarea>`;
- else if(it.t==='photo')inner=`<button class="btn sec" data-a="media" data-x="ans:${it.id}">${a.media?.length?'Weiteres Foto':'Foto aufnehmen oder wählen'}</button>`;
- else if(it.t==='sig')inner=`<canvas class="sig" id="sig" data-id="${it.id}"></canvas><div class="qa"><button data-a="sigClr">Löschen</button><span class="sub" style="padding:8px">${v?'Unterschrieben':'Mit Finger oder Maus unterschreiben'}</span></div>`;
+ else if(it.t==='photo')inner=`<button class="btn sec" data-a="media" data-x="ans:${it.id}">${a.media?.length?'Add another photo':'Take or choose photo'}</button>`;
+ else if(it.t==='sig')inner=`<canvas class="sig" id="sig" data-id="${it.id}"></canvas><div class="qa"><button data-a="sigClr">Clear</button><span class="sub" style="padding:8px">${v?'Signed':'Sign with finger or mouse'}</span></div>`;
  else inner=`<input class="in" type="text" data-ans="${it.id}" id="f-${it.id}" value="${esc(v)}">`;
  const extra=['yn','number','text','photo'].includes(it.t)&&!['prep','loc'].includes(it.id);
  return `<div class="q ${U.miss.includes(it.id)?'miss':''}" id="q-${it.id}"><h4>${esc(it.l)}${r}</h4>${inner}
  ${a.note?`<div class="note">${esc(a.note)}</div>`:''}${a.media?.length?`<div class="thumbs">${a.media.map(m=>`<img src="${m}" alt="">`).join('')}</div>`:''}
- ${extra?`<div class="qa"><button data-a="noteQ" data-x="${it.id}">${ic('note')}Anmerkung</button>${it.t!=='photo'?`<button data-a="media" data-x="ans:${it.id}">${ic('cam')}Medien</button>`:''}<button data-a="qAct" data-x="${it.id}">${ic('act')}Aktion</button></div>`:''}</div>`;
+ ${extra?`<div class="qa"><button data-a="noteQ" data-x="${it.id}">${ic('note')}Note</button>${it.t!=='photo'?`<button data-a="media" data-x="ans:${it.id}">${ic('cam')}Media</button>`:''}<button data-a="qAct" data-x="${it.id}">${ic('act')}Action</button></div>`:''}</div>`;
 }
 function sConduct(id){
  const i=S.ins.find(x=>x.id===id),t=tpl(i.tpl),p=t.pages[U.page],sc=score(i),last=U.page===t.pages.length-1;
- return hdSub(t.name,`<button class="ib" data-a="sheet" data-x="pages" aria-label="Seiten">${ic('doc')}</button>`)+`<div class="prog"><i style="width:${(U.page+1)/t.pages.length*100}%"></i></div>
- <div class="scr"><div class="kick" style="margin-top:4px">Seite ${U.page+1}/${t.pages.length} · Bewertung ${sc.y}/${sc.tot} (${sc.pct.toLocaleString('de-DE')} %)</div><h3 style="margin:0 0 12px;font-size:20px">${esc(p.title)}</h3>${p.items.map(it=>field(i,it)).join('')}</div>
- <div class="bar">${U.page?`<button class="btn sec" data-a="pg" data-x="-1">Zurück</button>`:''}${last?`<button class="btn" data-a="finish">Abschließen</button>`:`<button class="btn" data-a="pg" data-x="1">Weiter</button>`}</div>`;
+ return hdSub(t.name,`<button class="ib" data-a="sheet" data-x="pages" aria-label="Pages">${ic('doc')}</button>`)+`<div class="prog"><i style="width:${(U.page+1)/t.pages.length*100}%"></i></div>
+ <div class="scr"><div class="kick" style="margin-top:4px">Page ${U.page+1}/${t.pages.length} · Score ${sc.y}/${sc.tot} (${sc.pct.toLocaleString('en-GB')}%)</div><h3 style="margin:0 0 12px;font-size:20px">${esc(p.title)}</h3>${p.items.map(it=>field(i,it)).join('')}</div>
+ <div class="bar">${U.page?`<button class="btn sec" data-a="pg" data-x="-1">Back</button>`:''}${last?`<button class="btn" data-a="finish">Complete</button>`:`<button class="btn" data-a="pg" data-x="1">Next</button>`}</div>`;
 }
 function sDone(id){
  const i=S.ins.find(x=>x.id===id),sc=score(i);
- return `<div class="hd"></div><div class="scr" style="text-align:center"><div style="width:110px;height:110px;margin:40px auto 10px;border-radius:28px;background:var(--ok);display:grid;place-items:center;color:#fff"><svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12.5l4 4 8-9"/></svg></div><div class="big">Abgeschlossen</div><p class="sub">Bewertung ${sc.y}/${sc.tot} (${sc.pct.toLocaleString('de-DE')} %) · ${sc.fl} markierte Punkte</p></div>
- <div class="bar" style="flex-direction:column"><button class="btn" data-a="doneRep">Bericht anzeigen</button><button class="btn sec" data-a="home">Speichern und schließen</button></div>`;
+ return `<div class="hd"></div><div class="scr" style="text-align:center"><div style="width:110px;height:110px;margin:40px auto 10px;border-radius:28px;background:var(--ok);display:grid;place-items:center;color:#fff"><svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12.5l4 4 8-9"/></svg></div><div class="big">Completed</div><p class="sub">Score ${sc.y}/${sc.tot} (${sc.pct.toLocaleString('en-GB')}%) · ${sc.fl} flagged items</p></div>
+ <div class="bar" style="flex-direction:column"><button class="btn" data-a="doneRep">View report</button><button class="btn sec" data-a="home">Save and close</button></div>`;
 }
 function sReport(id){
  const i=S.ins.find(x=>x.id===id),t=tpl(i.tpl),sc=score(i);
  const fl=allItems(t).filter(it=>it.t==='yn'&&i.ans[it.id]?.v==='n');
- const val=(it)=>{const a=i.ans[it.id]||{};if(it.t==='yn')return {y:'Ja',n:'<span class="fl">Nein</span>',na:'N.A.'}[a.v]||'–';if(it.t==='site')return esc(sname(a.v));if(it.t==='asset')return esc(aname(a.v)||'–');if(it.t==='datetime')return fdt(a.v);if(it.t==='sig')return a.v?'✓':'–';if(it.t==='photo')return (a.media?.length||0)+' Foto(s)';return esc(a.v||'–')};
- return hdSub('Bericht',`<button class="ib" data-a="copyRep" aria-label="Kopieren">${ic('doc')}</button>`)+`<div class="scr"><div class="rep"><h3>${esc(t.name)}</h3><div style="color:#555">${esc(sname(i.ans.site?.v))} · ${fdt(i.ans.date?.v)} · ${esc(i.ans.prep?.v||'')}</div>
- <table><tr><td>Bewertung</td><td>${sc.y}/${sc.tot} (${sc.pct.toLocaleString('de-DE')} %)</td></tr><tr><td>Markierte Punkte</td><td>${sc.fl}</td></tr><tr><td>Asset</td><td>${esc(aname(i.ans.asset?.v)||'–')}</td></tr><tr><td>Abgeschlossen</td><td>${fdt(i.done)}</td></tr></table>
- ${fl.length?`<div class="sec" style="background:#d92d20">Markierte Punkte (${fl.length})</div><table>${fl.map(it=>`<tr><td>${esc(it.l)}${i.ans[it.id].note?`<br><small style="color:#555">${esc(i.ans[it.id].note)}</small>`:''}</td><td class="fl">Nein</td></tr>`).join('')}</table>`:''}
- ${t.pages.map(p=>`<div class="sec">${esc(p.title)}</div><table>${p.items.map(it=>`<tr><td>${esc(it.l)}${i.ans[it.id]?.note?`<br><small style="color:#555">${esc(i.ans[it.id].note)}</small>`:''}${(i.ans[it.id]?.media||[]).map(m=>`<br><img src="${m}" alt="" style="width:120px;margin-top:4px;border-radius:6px">`).join('')}${it.t==='sig'&&i.ans.sig?.v?`<br><img src="${i.ans.sig.v}" alt="Unterschrift" style="width:180px;background:#fafafa">`:''}</td><td>${val(it)}</td></tr>`).join('')}</table>`).join('')}
- </div><p class="local">PDF-Export und Teilen übernimmt in der echten App der Server. Hier: Text kopieren oben rechts.</p></div>`;
+ const val=(it)=>{const a=i.ans[it.id]||{};if(it.t==='yn')return {y:'Yes',n:'<span class="fl">No</span>',na:'N/A'}[a.v]||'–';if(it.t==='site')return esc(sname(a.v));if(it.t==='asset')return esc(aname(a.v)||'–');if(it.t==='datetime')return fdt(a.v);if(it.t==='sig')return a.v?'✓':'–';if(it.t==='photo')return (a.media?.length||0)+' photo(s)';return esc(a.v||'–')};
+ return hdSub('Report',`<button class="ib" data-a="copyRep" aria-label="Copy">${ic('doc')}</button>`)+`<div class="scr"><div class="rep"><h3>${esc(t.name)}</h3><div style="color:#555">${esc(sname(i.ans.site?.v))} · ${fdt(i.ans.date?.v)} · ${esc(i.ans.prep?.v||'')}</div>
+ <table><tr><td>Score</td><td>${sc.y}/${sc.tot} (${sc.pct.toLocaleString('en-GB')}%)</td></tr><tr><td>Flagged items</td><td>${sc.fl}</td></tr><tr><td>Asset</td><td>${esc(aname(i.ans.asset?.v)||'–')}</td></tr><tr><td>Completed</td><td>${fdt(i.done)}</td></tr></table>
+ ${fl.length?`<div class="sec" style="background:#d92d20">Flagged items (${fl.length})</div><table>${fl.map(it=>`<tr><td>${esc(it.l)}${i.ans[it.id].note?`<br><small style="color:#555">${esc(i.ans[it.id].note)}</small>`:''}</td><td class="fl">No</td></tr>`).join('')}</table>`:''}
+ ${t.pages.map(p=>`<div class="sec">${esc(p.title)}</div><table>${p.items.map(it=>`<tr><td>${esc(it.l)}${i.ans[it.id]?.note?`<br><small style="color:#555">${esc(i.ans[it.id].note)}</small>`:''}${(i.ans[it.id]?.media||[]).map(m=>`<br><img src="${m}" alt="" style="width:120px;margin-top:4px;border-radius:6px">`).join('')}${it.t==='sig'&&i.ans.sig?.v?`<br><img src="${i.ans.sig.v}" alt="Signature" style="width:180px;background:#fafafa">`:''}</td><td>${val(it)}</td></tr>`).join('')}</table>`).join('')}
+ </div><p class="local">In the real app the server handles PDF export and sharing. Here: copy as text, top right.</p></div>`;
 }
 function sIssNew(){
  const d=U.idraft;
- if(d.step===1)return hdSub('Problem melden')+`<div class="scr"><div class="ai">${ic('spark')}<span>Beschreiben Sie, was passiert ist. Die Assistenz füllt Kategorie, Titel, Priorität und Anlage vor.</span></div>
- <label class="f"><span>Was ist passiert?</span><textarea class="in" id="idtext" data-id="text" style="min-height:150px" placeholder="z. B. An PV Array 1.3 ist ein Modul gebrochen, Kabel hängt lose.">${esc(d.text)}</textarea></label>
- <button class="btn sec" data-a="media" data-x="idraft">Medien hinzufügen</button>${d.media.length?`<div class="thumbs">${d.media.map(m=>`<img src="${m}" alt="">`).join('')}</div>`:''}
- <p class="sub" style="margin-top:10px">Bis zu 10 Fotos. Audioaufnahme ist im Browser-Prototyp nicht verfügbar.</p></div>
- <div class="bar"><button class="btn ghost" data-a="manual">Manuell eingeben</button><button class="btn" data-a="analyze">Fortfahren</button></div>`;
- if(d.step===2)return hdSub('Problem melden')+`<div class="scr" style="text-align:center"><div class="spin"></div><b>Analysieren …</b></div>`;
- return hdSub('Problem melden')+`<div class="scr">${d.ai?`<div class="ai">${ic('spark')}<span>Vorausgefüllt (simulierte KI, regelbasiert). Bitte prüfen. War das hilfreich? <button class="chip" data-a="aiFb" data-x="1">Ja</button> <button class="chip" data-a="aiFb" data-x="0">Nein</button></span></div>`:''}
- <label class="f"><span>Kategorie <span class="req">*</span></span><select class="in" id="ic" data-id="cat">${['','Vorfall','Beinaheunfall','Gefährdung','Technischer Mangel','Umwelt','Feedback'].map(c=>`<option ${d.cat===c?'selected':''} value="${c}">${c||'Kategorie wählen'}</option>`).join('')}</select></label>
- <label class="f"><span>Titel <span class="req">*</span></span><input class="in" id="it" data-id="title" value="${esc(d.title)}"></label>
- <label class="f"><span>Beschreibung</span><textarea class="in" id="idsc" data-id="text">${esc(d.text)}</textarea></label>
- <label class="f"><span>Priorität</span><select class="in" id="ip" data-id="prio">${['Niedrig','Mittel','Hoch'].map(c=>`<option ${d.prio===c?'selected':''}>${c}</option>`).join('')}</select></label>
+ if(d.step===1)return hdSub('Report issue')+`<div class="scr"><div class="ai">${ic('spark')}<span>Describe what happened. The assistant pre-fills category, title, priority and asset.</span></div>
+ <label class="f"><span>What happened?</span><textarea class="in" id="idtext" data-id="text" style="min-height:150px" placeholder="e.g. A module on PV Array 1.3 is broken and a cable is hanging loose.">${esc(d.text)}</textarea></label>
+ <button class="btn sec" data-a="media" data-x="idraft">Add media</button>${d.media.length?`<div class="thumbs">${d.media.map(m=>`<img src="${m}" alt="">`).join('')}</div>`:''}
+ <p class="sub" style="margin-top:10px">Up to 10 photos. Audio recording isn't available in the browser prototype.</p></div>
+ <div class="bar"><button class="btn ghost" data-a="manual">Enter manually</button><button class="btn" data-a="analyze">Continue</button></div>`;
+ if(d.step===2)return hdSub('Report issue')+`<div class="scr" style="text-align:center"><div class="spin"></div><b>Analysing …</b></div>`;
+ return hdSub('Report issue')+`<div class="scr">${d.ai?`<div class="ai">${ic('spark')}<span>Pre-filled (simulated AI, rule-based). Please check. Was this helpful? <button class="chip" data-a="aiFb" data-x="1">Yes</button> <button class="chip" data-a="aiFb" data-x="0">No</button></span></div>`:''}
+ <label class="f"><span>Category <span class="req">*</span></span><select class="in" id="ic" data-id="cat">${['','Incident','Near miss','Hazard','Technical defect','Environment','Feedback'].map(c=>`<option ${d.cat===c?'selected':''} value="${c}">${c||'Choose category'}</option>`).join('')}</select></label>
+ <label class="f"><span>Title <span class="req">*</span></span><input class="in" id="it" data-id="title" value="${esc(d.title)}"></label>
+ <label class="f"><span>Description</span><textarea class="in" id="idsc" data-id="text">${esc(d.text)}</textarea></label>
+ <label class="f"><span>Priority</span><select class="in" id="ip" data-id="prio">${['Low','Medium','High'].map(c=>`<option ${d.prio===c?'selected':''}>${c}</option>`).join('')}</select></label>
  <label class="f"><span>Site</span><select class="in" id="is" data-id="site" data-re="1">${S.sites.map(s=>`<option value="${s.id}" ${d.site===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select></label>
- <label class="f"><span>Asset</span><select class="in" id="ia" data-id="asset"><option value="">Kein Asset</option>${S.assets.filter(a=>a.site===d.site).map(a=>`<option value="${a.id}" ${d.asset===a.id?'selected':''}>${esc(a.name)}</option>`).join('')}</select></label>
- <label class="f"><span>Aufgetreten am</span><input class="in" type="datetime-local" id="iat" data-id="at" value="${esc(d.at)}"></label>
+ <label class="f"><span>Asset</span><select class="in" id="ia" data-id="asset"><option value="">No asset</option>${S.assets.filter(a=>a.site===d.site).map(a=>`<option value="${a.id}" ${d.asset===a.id?'selected':''}>${esc(a.name)}</option>`).join('')}</select></label>
+ <label class="f"><span>Occurred at</span><input class="in" type="datetime-local" id="iat" data-id="at" value="${esc(d.at)}"></label>
  ${d.media.length?`<div class="thumbs">${d.media.map(m=>`<img src="${m}" alt="">`).join('')}</div>`:''}</div>
- <div class="bar"><button class="btn" data-a="sendIss">Senden</button></div>`;
+ <div class="bar"><button class="btn" data-a="sendIss">Submit</button></div>`;
 }
 function sIss(id){
  const x=S.issues.find(i=>i.id===id),acts=S.actions.filter(a=>a.src===id);
- const tb=[['ov','Übersicht'],['det','Einzelheiten'],['log','Aktivität']].map(([k,l])=>`<button class="${U.itab===k?'on':''}" data-a="itab" data-x="${k}">${l}</button>`).join('');
+ const tb=[['ov','Overview'],['det','Details'],['log','Activity']].map(([k,l])=>`<button class="${U.itab===k?'on':''}" data-a="itab" data-x="${k}">${l}</button>`).join('');
  let b='';
- if(U.itab==='ov')b=`<div class="card"><label class="f" style="margin:0"><span>Status</span><select class="in" id="ist" data-iss="st">${['Offen','In Bearbeitung','Gelöst'].map(s=>`<option ${x.st===s?'selected':''}>${s}</option>`).join('')}</select></label></div>
- <div class="card"><b>${esc(sname(x.site))}</b><span class="sub">${esc(site(x.site)?.addr||'')}${x.asset?' · '+esc(aname(x.asset)):''}</span>${x.media.length?`<div class="thumbs">${x.media.map(m=>`<img src="${m}" alt="">`).join('')}</div>`:''}<div class="qa"><button data-a="media" data-x="iss:${x.id}">${ic('cam')}Foto hinzufügen</button></div></div>
- ${x.ins&&S.ins.some(i=>i.id===x.ins)?`<div class="kick">Verknüpfte Inspektion</div>`+rowIns(S.ins.find(i=>i.id===x.ins)):''}
- <div class="kick">Aktionen</div>${acts.map(rowAct).join('')}<button class="btn sec" data-a="newAct" data-x="iss:${x.id}">Aktion erstellen</button>`;
- if(U.itab==='det')b=`<div class="card"><dl class="meta"><dt>Kategorie</dt><dd>${esc(x.cat)}</dd><dt>Priorität</dt><dd>${prPill(x.prio)}</dd><dt>Aufgetreten</dt><dd>${fdt(x.at)}</dd><dt>Site</dt><dd>${esc(sname(x.site))}</dd><dt>Asset</dt><dd>${esc(aname(x.asset)||'–')}</dd><dt>ID</dt><dd>${x.id}</dd><dt>Erstellt von</dt><dd>${esc(x.by)}</dd></dl></div><div class="card">${esc(x.desc)||'<span class="sub">Keine Beschreibung</span>'}</div>`;
- if(U.itab==='log')b=x.log.slice().reverse().map(l=>`<div class="act">${esc(l.x)}<small>${esc(l.w)} · ${fdt(l.t)}</small></div>`).join('')+`<label class="f" style="margin-top:14px"><span>Kommentar</span><textarea class="in" id="cmt"></textarea></label><button class="btn" data-a="cmt">Kommentar senden</button>`;
+ if(U.itab==='ov')b=`<div class="card"><label class="f" style="margin:0"><span>Status</span><select class="in" id="ist" data-iss="st">${['Open','In progress','Resolved'].map(s=>`<option ${x.st===s?'selected':''}>${s}</option>`).join('')}</select></label></div>
+ <div class="card"><b>${esc(sname(x.site))}</b><span class="sub">${esc(site(x.site)?.addr||'')}${x.asset?' · '+esc(aname(x.asset)):''}</span>${x.media.length?`<div class="thumbs">${x.media.map(m=>`<img src="${m}" alt="">`).join('')}</div>`:''}<div class="qa"><button data-a="media" data-x="iss:${x.id}">${ic('cam')}Add photo</button></div></div>
+ ${x.ins&&S.ins.some(i=>i.id===x.ins)?`<div class="kick">Linked inspection</div>`+rowIns(S.ins.find(i=>i.id===x.ins)):''}
+ <div class="kick">Actions</div>${acts.map(rowAct).join('')}<button class="btn sec" data-a="newAct" data-x="iss:${x.id}">Create action</button>`;
+ if(U.itab==='det')b=`<div class="card"><dl class="meta"><dt>Category</dt><dd>${esc(x.cat)}</dd><dt>Priority</dt><dd>${prPill(x.prio)}</dd><dt>Occurred</dt><dd>${fdt(x.at)}</dd><dt>Site</dt><dd>${esc(sname(x.site))}</dd><dt>Asset</dt><dd>${esc(aname(x.asset)||'–')}</dd><dt>ID</dt><dd>${x.id}</dd><dt>Created by</dt><dd>${esc(x.by)}</dd></dl></div><div class="card">${esc(x.desc)||'<span class="sub">No description</span>'}</div>`;
+ if(U.itab==='log')b=x.log.slice().reverse().map(l=>`<div class="act">${esc(l.x)}<small>${esc(l.w)} · ${fdt(l.t)}</small></div>`).join('')+`<label class="f" style="margin-top:14px"><span>Comment</span><textarea class="in" id="cmt"></textarea></label><button class="btn" data-a="cmt">Post comment</button>`;
  return hdSub(x.id)+`<div class="scr"><div class="big" style="font-size:26px">${esc(x.title)}</div><div style="margin-bottom:12px">${stPill(x.st)} ${prPill(x.prio)} <span class="pill">${esc(x.cat)}</span></div><div class="tabsx">${tb}</div>${b}</div>`;
 }
-const TYPES={'Aktion':[],'PSA-Bestellung':[['size','Größe'],['qty','Anzahl']],'SAP-Meldung':[['eq','Equipment / TPLNR'],['art','Meldungsart']]};
+const TYPES={'Action':[],'PPE order':[['size','Size'],['qty','Quantity']],'SAP notification':[['eq','Equipment / functional location'],['art','Notification type']]};
 function sAct(){
  const d=U.draft,isNew=!S.actions.some(a=>a.id===d.id);
- const src=d.src?`<div class="ai">${ic('act')}<span>Quelle: ${esc(d.srcl||d.src)}</span></div>`:'';
- return hdSub(isNew?'Neue Aktion':d.id,isNew?'':`<button class="ib" data-a="dlg" data-x="delAct" aria-label="Löschen">${ic('x')}</button>`)+`<div class="scr">${src}
- <label class="f"><span>Typ</span><select class="in" id="at" data-d="type" data-re="1">${Object.keys(TYPES).map(t=>`<option ${d.type===t?'selected':''}>${t}</option>`).join('')}</select></label>
- <label class="f"><span>Titel <span class="req">*</span></span><input class="in" id="att" data-d="title" value="${esc(d.title)}"></label>
- <label class="f"><span>Beschreibung</span><textarea class="in" id="ad" data-d="desc">${esc(d.desc)}</textarea></label>
- <div class="kick" style="margin-top:0">Status</div><div class="seg">${['Offen','In Bearbeitung','Erledigt'].map(s=>`<button class="${d.st===s?'on':''}" data-a="ast" data-x="${s}">${s}</button>`).join('')}</div>
- <label class="f"><span>Priorität</span><select class="in" id="ap" data-d="prio">${['Niedrig','Mittel','Hoch'].map(c=>`<option ${d.prio===c?'selected':''}>${c}</option>`).join('')}</select></label>
- <label class="f"><span>Fällig am</span><input class="in" type="date" id="adue" data-d="due" value="${esc(d.due)}"></label>
- <label class="f"><span>Beauftragt</span><select class="in" id="aw" data-d="who">${[USER,'Lennart Peters','Priyanka Joshi','Farouk Elguefrei'].map(c=>`<option ${d.who===c?'selected':''}>${c}</option>`).join('')}</select></label>
+ const src=d.src?`<div class="ai">${ic('act')}<span>Source: ${esc(d.srcl||d.src)}</span></div>`:'';
+ return hdSub(isNew?'New action':d.id,isNew?'':`<button class="ib" data-a="dlg" data-x="delAct" aria-label="Delete">${ic('x')}</button>`)+`<div class="scr">${src}
+ <label class="f"><span>Type</span><select class="in" id="at" data-d="type" data-re="1">${Object.keys(TYPES).map(t=>`<option ${d.type===t?'selected':''}>${t}</option>`).join('')}</select></label>
+ <label class="f"><span>Title <span class="req">*</span></span><input class="in" id="att" data-d="title" value="${esc(d.title)}"></label>
+ <label class="f"><span>Description</span><textarea class="in" id="ad" data-d="desc">${esc(d.desc)}</textarea></label>
+ <div class="kick" style="margin-top:0">Status</div><div class="seg">${['Open','In progress','Done'].map(s=>`<button class="${d.st===s?'on':''}" data-a="ast" data-x="${s}">${s}</button>`).join('')}</div>
+ <label class="f"><span>Priority</span><select class="in" id="ap" data-d="prio">${['Low','Medium','High'].map(c=>`<option ${d.prio===c?'selected':''}>${c}</option>`).join('')}</select></label>
+ <label class="f"><span>Due date</span><input class="in" type="date" id="adue" data-d="due" value="${esc(d.due)}"></label>
+ <label class="f"><span>Assignee</span><select class="in" id="aw" data-d="who">${[USER,'Lennart Peters','Priyanka Joshi','Farouk Elguefrei'].map(c=>`<option ${d.who===c?'selected':''}>${c}</option>`).join('')}</select></label>
  <label class="f"><span>Site</span><select class="in" id="as" data-d="site" data-re="1">${S.sites.map(s=>`<option value="${s.id}" ${d.site===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select></label>
- <label class="f"><span>Asset</span><select class="in" id="aa" data-d="asset"><option value="">Kein Asset</option>${S.assets.filter(a=>a.site===d.site).map(a=>`<option value="${a.id}" ${d.asset===a.id?'selected':''}>${esc(a.name)}</option>`).join('')}</select></label>
- ${TYPES[d.type].length?`<div class="kick">Benutzerdefinierte Felder · ${esc(d.type)}</div>`+TYPES[d.type].map(([k,l])=>`<label class="f"><span>${l}</span><input class="in" id="cf-${k}" data-cf="${k}" value="${esc(d.cf[k]||'')}"></label>`).join(''):''}
- <p class="sub">Sichtbar für Mitglieder des Standorts.</p></div><div class="bar"><button class="btn" data-a="saveAct">Speichern</button></div>`;
+ <label class="f"><span>Asset</span><select class="in" id="aa" data-d="asset"><option value="">No asset</option>${S.assets.filter(a=>a.site===d.site).map(a=>`<option value="${a.id}" ${d.asset===a.id?'selected':''}>${esc(a.name)}</option>`).join('')}</select></label>
+ ${TYPES[d.type].length?`<div class="kick">Custom fields · ${esc(d.type)}</div>`+TYPES[d.type].map(([k,l])=>`<label class="f"><span>${l}</span><input class="in" id="cf-${k}" data-cf="${k}" value="${esc(d.cf[k]||'')}"></label>`).join(''):''}
+ <p class="sub">Visible to site members.</p></div><div class="bar"><button class="btn" data-a="saveAct">Save</button></div>`;
 }
 function sAssets(){
  const q=U.q.toLowerCase();
- let h=hdSub('Assets')+`<div class="scr"><input class="in" id="aq" data-q="1" placeholder="Name oder technische ID suchen" value="${esc(U.q)}" style="margin-bottom:12px">`;
+ let h=hdSub('Assets')+`<div class="scr"><input class="in" id="aq" data-q="1" placeholder="Search name or technical ID" value="${esc(U.q)}" style="margin-bottom:12px">`;
  for(const s of S.sites){const L=S.assets.filter(a=>a.site===s.id&&(!q||(a.name+a.tid).toLowerCase().includes(q)));if(!L.length)continue;
-  h+=`<div class="kick">${esc(s.name)}</div>`+L.map(a=>{const o=S.actions.filter(x=>x.asset===a.id&&x.st!=='Erledigt').length+S.issues.filter(x=>x.asset===a.id&&x.st!=='Gelöst').length;return `<button class="row" data-a="openAsset" data-x="${a.id}"><span class="ico">${ic(a.type==='WEA'?'wind':a.type==='PV-Array'?'sun':'asset')}</span><span class="m"><b>${esc(a.name)}</b><small>${esc(a.type)} · ${esc(a.tid)}</small></span>${o?`<span class="pill p-open">${o} offen</span>`:`<span class="pill">${esc(a.st)}</span>`}</button>`}).join('')}
+  h+=`<div class="kick">${esc(s.name)}</div>`+L.map(a=>{const o=S.actions.filter(x=>x.asset===a.id&&x.st!=='Done').length+S.issues.filter(x=>x.asset===a.id&&x.st!=='Resolved').length;return `<button class="row" data-a="openAsset" data-x="${a.id}"><span class="ico">${ic(a.type==='Wind turbine'?'wind':a.type==='PV array'?'sun':'asset')}</span><span class="m"><b>${esc(a.name)}</b><small>${esc(a.type)} · ${esc(a.tid)}</small></span>${o?`<span class="pill p-open">${o} open</span>`:`<span class="pill">${esc(a.st)}</span>`}</button>`}).join('')}
  return h+`</div>`;
 }
 function sAsset(id){
  const a=asset(id),acts=S.actions.filter(x=>x.asset===id),iss=S.issues.filter(x=>x.asset===id),ins=S.ins.filter(x=>x.ans.asset?.v===id);
- const tb=[['open','Zu erledigen'],['hist','Verlauf'],['det','Einzelheiten']].map(([k,l])=>`<button class="${U.atab===k?'on':''}" data-a="atab" data-x="${k}">${l}</button>`).join('');
+ const tb=[['open','To do'],['hist','History'],['det','Details']].map(([k,l])=>`<button class="${U.atab===k?'on':''}" data-a="atab" data-x="${k}">${l}</button>`).join('');
  let b='';
- if(U.atab==='open'){const oa=acts.filter(x=>x.st!=='Erledigt'),oi=iss.filter(x=>x.st!=='Gelöst'),op=ins.filter(x=>x.st==='prog');b=(oa.length+oi.length+op.length)?op.map(rowIns).join('')+oi.map(rowIss).join('')+oa.map(rowAct).join(''):`<div class="empty">${ic('check')}<b>Keine offenen Aufgaben</b>Für dieses Asset ist nichts offen.</div>`}
- if(U.atab==='hist')b=ins.map(rowIns).join('')+iss.map(rowIss).join('')+acts.map(rowAct).join('')||'<p class="sub">Noch kein Verlauf.</p>';
- if(U.atab==='det')b=`<div class="card"><dl class="meta"><dt>Typ</dt><dd>${esc(a.type)}</dd><dt>Technische ID</dt><dd style="overflow-wrap:anywhere">${esc(a.tid)}</dd><dt>Site</dt><dd>${esc(sname(a.site))}</dd><dt>Status</dt><dd>${esc(a.st)}</dd></dl></div>`;
- return hdSub(a.tid)+`<div class="scr"><div class="big" style="font-size:28px">${esc(a.name)}</div><div style="margin-bottom:12px"><span class="pill">${esc(a.type)}</span> <span class="pill">${esc(sname(a.site))}</span></div><div class="tabsx">${tb}</div>${b}</div><button class="fab" style="bottom:24px" data-a="sheet" data-x="assetPlus" aria-label="Neu">+</button>`;
+ if(U.atab==='open'){const oa=acts.filter(x=>x.st!=='Done'),oi=iss.filter(x=>x.st!=='Resolved'),op=ins.filter(x=>x.st==='prog');b=(oa.length+oi.length+op.length)?op.map(rowIns).join('')+oi.map(rowIss).join('')+oa.map(rowAct).join(''):`<div class="empty">${ic('check')}<b>No open tasks</b>Nothing is open for this asset.</div>`}
+ if(U.atab==='hist')b=ins.map(rowIns).join('')+iss.map(rowIss).join('')+acts.map(rowAct).join('')||'<p class="sub">No history yet.</p>';
+ if(U.atab==='det')b=`<div class="card"><dl class="meta"><dt>Type</dt><dd>${esc(a.type)}</dd><dt>Technical ID</dt><dd style="overflow-wrap:anywhere">${esc(a.tid)}</dd><dt>Site</dt><dd>${esc(sname(a.site))}</dd><dt>Status</dt><dd>${esc(a.st)}</dd></dl></div>`;
+ return hdSub(a.tid)+`<div class="scr"><div class="big" style="font-size:28px">${esc(a.name)}</div><div style="margin-bottom:12px"><span class="pill">${esc(a.type)}</span> <span class="pill">${esc(sname(a.site))}</span></div><div class="tabsx">${tb}</div>${b}</div><button class="fab" style="bottom:24px" data-a="sheet" data-x="assetPlus" aria-label="New">+</button>`;
 }
-function sSites(){return hdSub('Sites')+`<div class="scr">`+S.sites.map(s=>`<div class="card"><b>${esc(s.name)}</b><span class="sub">${esc(s.addr)}</span><span class="sub">${S.assets.filter(a=>a.site===s.id).length} Assets · ${S.ins.filter(i=>i.ans.site?.v===s.id).length} Inspektionen · ${S.issues.filter(i=>i.site===s.id&&i.st!=='Gelöst').length} offene Probleme</span></div>`).join('')+`</div>`}
-function sTpl(){return hdSub('Vorlagen')+`<div class="scr">`+TPL.map(t=>`<div class="card"><b>${esc(t.name)}</b>${t.pages.map((p,k)=>`<div class="sub" style="margin-top:6px">${k+1}. ${esc(p.title)}: ${p.items.map(i=>esc(i.l)).join(' · ')}</div>`).join('')}</div>`).join('')+`<p class="local">Vorlagen werden als JSON-Schema definiert. Ein Editor gehört in den Web-Admin.</p></div>`}
+function sSites(){return hdSub('Sites')+`<div class="scr">`+S.sites.map(s=>`<div class="card"><b>${esc(s.name)}</b><span class="sub">${esc(s.addr)}</span><span class="sub">${S.assets.filter(a=>a.site===s.id).length} assets · ${S.ins.filter(i=>i.ans.site?.v===s.id).length} inspections · ${S.issues.filter(i=>i.site===s.id&&i.st!=='Resolved').length} open issues</span></div>`).join('')+`</div>`}
+function sTpl(){return hdSub('Templates')+`<div class="scr">`+TPL.map(t=>`<div class="card"><b>${esc(t.name)}</b>${t.pages.map((p,k)=>`<div class="sub" style="margin-top:6px">${k+1}. ${esc(p.title)}: ${p.items.map(i=>esc(i.l)).join(' · ')}</div>`).join('')}</div>`).join('')+`<p class="local">Templates are defined as a JSON schema. An editor belongs in the web admin.</p></div>`}
 
 /* ---------- sheets + dialogs ---------- */
 function sheet(){
  const k=U.sheet;if(!k)return '';let h='';
- if(k==='plus')h=`<h3>Erstellen</h3><button class="row" data-a="sheetGo" data-x="ins"><span class="ico">${ic('clip')}</span><span class="m"><b>Inspektion beginnen</b><small>Vorlage wählen und starten</small></span></button><button class="row" data-a="sheetGo" data-x="iss"><span class="ico">${ic('alert')}</span><span class="m"><b>Problem melden</b><small>Vorfall, Gefahr oder Feedback erfassen</small></span></button><button class="row" data-a="sheetGo" data-x="act"><span class="ico">${ic('act')}</span><span class="m"><b>Aktion erstellen</b><small>Aufgabe anlegen und zuweisen</small></span></button>`;
- if(k==='assetPlus')h=`<h3>Für dieses Asset</h3>`+TPL.map(t=>`<button class="row" data-a="startIns" data-x="${t.id}"><span class="ico">${ic(t.icon)}</span><span class="m"><b>${esc(t.name)}</b><small>Inspektion beginnen</small></span></button>`).join('')+`<button class="row" data-a="sheetGo" data-x="iss"><span class="ico">${ic('alert')}</span><span class="m"><b>Problem melden</b></span></button><button class="row" data-a="sheetGo" data-x="act"><span class="ico">${ic('act')}</span><span class="m"><b>Aktion erstellen</b></span></button>`;
- if(k==='sites')h=`<h3>Site filtern</h3><button class="row" data-a="setSite" data-x=""><span class="m"><b>Alle Sites</b></span></button>`+S.sites.map(s=>`<button class="row" data-a="setSite" data-x="${s.id}"><span class="ico">${ic('pin')}</span><span class="m"><b>${esc(s.name)}</b></span>${U.site===s.id?'✓':''}</button>`).join('');
- if(k==='pages'){const i=S.ins.find(x=>x.id===top().id),t=tpl(i.tpl);h=`<h3>Seiten</h3>`+t.pages.map((p,n)=>`<button class="row" data-a="goPage" data-x="${n}"><span class="m"><b>${n+1}. ${esc(p.title)}</b><small>${p.items.filter(it=>i.ans[it.id]?.v).length}/${p.items.length} beantwortet</small></span></button>`).join('')}
- if(k==='note')h=`<h3>Anmerkung</h3><textarea class="in" id="noteIn">${esc(curIns().ans[U.noteId]?.note||'')}</textarea><div style="height:10px"></div><button class="btn" data-a="saveNote">Sichern</button>`;
+ if(k==='plus')h=`<h3>Create</h3><button class="row" data-a="sheetGo" data-x="ins"><span class="ico">${ic('clip')}</span><span class="m"><b>Start inspection</b><small>Choose a template and begin</small></span></button><button class="row" data-a="sheetGo" data-x="iss"><span class="ico">${ic('alert')}</span><span class="m"><b>Report issue</b><small>Capture an incident, hazard or feedback</small></span></button><button class="row" data-a="sheetGo" data-x="act"><span class="ico">${ic('act')}</span><span class="m"><b>Create action</b><small>Create a task and assign it</small></span></button>`;
+ if(k==='assetPlus')h=`<h3>For this asset</h3>`+TPL.map(t=>`<button class="row" data-a="startIns" data-x="${t.id}"><span class="ico">${ic(t.icon)}</span><span class="m"><b>${esc(t.name)}</b><small>Start inspection</small></span></button>`).join('')+`<button class="row" data-a="sheetGo" data-x="iss"><span class="ico">${ic('alert')}</span><span class="m"><b>Report issue</b></span></button><button class="row" data-a="sheetGo" data-x="act"><span class="ico">${ic('act')}</span><span class="m"><b>Create action</b></span></button>`;
+ if(k==='sites')h=`<h3>Filter by site</h3><button class="row" data-a="setSite" data-x=""><span class="m"><b>All sites</b></span></button>`+S.sites.map(s=>`<button class="row" data-a="setSite" data-x="${s.id}"><span class="ico">${ic('pin')}</span><span class="m"><b>${esc(s.name)}</b></span>${U.site===s.id?'✓':''}</button>`).join('');
+ if(k==='pages'){const i=S.ins.find(x=>x.id===top().id),t=tpl(i.tpl);h=`<h3>Pages</h3>`+t.pages.map((p,n)=>`<button class="row" data-a="goPage" data-x="${n}"><span class="m"><b>${n+1}. ${esc(p.title)}</b><small>${p.items.filter(it=>i.ans[it.id]?.v).length}/${p.items.length} answered</small></span></button>`).join('')}
+ if(k==='note')h=`<h3>Note</h3><textarea class="in" id="noteIn">${esc(curIns().ans[U.noteId]?.note||'')}</textarea><div style="height:10px"></div><button class="btn" data-a="saveNote">Save</button>`;
  return `<div class="ov" data-a="closeOv"><div class="sheet" data-stop="1">${h}</div></div>`;
 }
 function dlg(){
  const k=U.dlg;if(!k)return '';let h='';
- if(k==='miss')h=`<h3>Einige Objekte erfordern Aufmerksamkeit</h3><p>${U.miss.length} Pflichtfeld(er) offen. Ergänzen Sie diese, um die Inspektion abzuschließen.</p><button class="btn" data-a="review">Inspektion überprüfen</button><button class="btn sec" data-a="saveProg">Als „Im Gange“ speichern</button><button class="btn ghost" data-a="closeDlg">Abbrechen</button>`;
- if(k==='reset')h=`<h3>Neue Zufallsdaten erzeugen?</h3><p>Sites, Assets, Inspektionen, Probleme und Aktionen werden neu ausgewürfelt. Lokale Änderungen gehen verloren.</p><button class="btn" style="background:var(--red)" data-a="doReset">Neu erzeugen</button><button class="btn ghost" data-a="closeDlg">Abbrechen</button>`;
- if(k==='delIns')h=`<h3>Inspektion löschen?</h3><p>Das kann nicht rückgängig gemacht werden.</p><button class="btn" style="background:var(--red)" data-a="doDelIns">Löschen</button><button class="btn ghost" data-a="closeDlg">Abbrechen</button>`;
- if(k==='delAct')h=`<h3>Aktion löschen?</h3><p>${esc(U.draft?.title)}</p><button class="btn" style="background:var(--red)" data-a="doDelAct">Löschen</button><button class="btn ghost" data-a="closeDlg">Abbrechen</button>`;
- if(k==='ios')h=`<h3>Auf iPhone/iPad installieren</h3><p>1. In Safari unten auf Teilen tippen.<br>2. „Zum Home-Bildschirm“ wählen.<br>3. „Hinzufügen“ bestätigen.</p><button class="btn" data-a="closeDlg">Verstanden</button>`;
- if(k==='discard')h=`<h3>Nicht gespeicherte Änderungen verwerfen?</h3><p>Ihre Eingaben gehen verloren.</p><button class="btn" style="background:var(--red)" data-a="doDiscard">Ja, verwerfen</button><button class="btn ghost" data-a="closeDlg">Abbrechen</button>`;
+ if(k==='miss')h=`<h3>Some items need attention</h3><p>${U.miss.length} required field(s) missing. Complete them to finish the inspection.</p><button class="btn" data-a="review">Review inspection</button><button class="btn sec" data-a="saveProg">Save as in progress</button><button class="btn ghost" data-a="closeDlg">Cancel</button>`;
+ if(k==='reset')h=`<h3>Generate new random data?</h3><p>Sites, assets, inspections, issues and actions are re-generated. Local changes will be lost.</p><button class="btn" style="background:var(--red)" data-a="doReset">Generate</button><button class="btn ghost" data-a="closeDlg">Cancel</button>`;
+ if(k==='delIns')h=`<h3>Delete inspection?</h3><p>This can't be undone.</p><button class="btn" style="background:var(--red)" data-a="doDelIns">Delete</button><button class="btn ghost" data-a="closeDlg">Cancel</button>`;
+ if(k==='delAct')h=`<h3>Delete action?</h3><p>${esc(U.draft?.title)}</p><button class="btn" style="background:var(--red)" data-a="doDelAct">Delete</button><button class="btn ghost" data-a="closeDlg">Cancel</button>`;
+ if(k==='ios')h=`<h3>Install on iPhone/iPad</h3><p>1. In Safari, tap Share.<br>2. Choose “Add to Home Screen”.<br>3. Tap “Add”.</p><button class="btn" data-a="closeDlg">Got it</button>`;
+ if(k==='discard')h=`<h3>Discard unsaved changes?</h3><p>Your entries will be lost.</p><button class="btn" style="background:var(--red)" data-a="doDiscard">Yes, discard</button><button class="btn ghost" data-a="closeDlg">Cancel</button>`;
  return `<div class="ov c"><div class="dlg">${h}</div></div>`;
 }
 
@@ -459,8 +459,8 @@ function render(reset){
  const tp=top();let body;
  if(tp){body=({ins:()=>sInsDetail(tp.id),conduct:()=>sConduct(tp.id),done:()=>sDone(tp.id),report:()=>sReport(tp.id),issNew:sIssNew,iss:()=>sIss(tp.id),act:sAct,assets:sAssets,asset:()=>sAsset(tp.id),sitesV:sSites,tplV:sTpl})[tp.v]()}
  else body=({start:vStart,ins:vIns,iss:vIss,act:vAct,more:vMore})[U.tab]();
- const tabs=tp?'':`<button class="fab" data-a="sheet" data-x="plus" aria-label="Erstellen">+</button><nav class="tabs">${[['start','home','Start'],['ins','clip','Inspektionen'],['iss','alert','Probleme'],['act','check','Aktionen'],['more','grid','Mehr']].map(([k,i,l])=>`<button class="tab ${U.tab===k?'on':''}" data-a="tab" data-x="${k}">${ic(i)}${l}</button>`).join('')}</nav>`;
- app.innerHTML=`<div class="status"><span>${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</span><span>Offline bereit</span></div>${body}${tabs}${sheet()}${dlg()}`;
+ const tabs=tp?'':`<button class="fab" data-a="sheet" data-x="plus" aria-label="Create">+</button><nav class="tabs">${[['start','home','Home'],['ins','clip','Inspections'],['iss','alert','Issues'],['act','check','Actions'],['more','grid','More']].map(([k,i,l])=>`<button class="tab ${U.tab===k?'on':''}" data-a="tab" data-x="${k}">${ic(i)}${l}</button>`).join('')}</nav>`;
+ app.innerHTML=`<div class="status"><span>${new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span><span>Offline ready</span></div>${body}${tabs}${sheet()}${dlg()}`;
  const key=(tp?tp.v+tp.id+U.page:U.tab);
  const ns=app.querySelector('.scr');if(ns&&!reset&&key===lastKey)ns.scrollTop=pos;lastKey=key;
  initSig();
@@ -488,19 +488,19 @@ function newIns(tid,assetId){
 }
 function newAct(srcKey){
  const t=top();let site0=U.site||S.sites[0].id,asset0='',src='',srcl='',title='';
- if(srcKey?.startsWith('iss:')){const x=S.issues.find(i=>i.id===srcKey.slice(4));site0=x.site;asset0=x.asset;src=x.id;srcl='Problem '+x.id+': '+x.title}
- if(srcKey?.startsWith('q:')){const i=curIns(),it=allItems(tpl(i.tpl)).find(q=>q.id===srcKey.slice(2));site0=i.ans.site?.v||site0;asset0=i.ans.asset?.v||'';src=i.id;srcl='Inspektion, Frage: '+it.l;title='Mangel: '+it.l.replace(/\?$/,'')}
+ if(srcKey?.startsWith('iss:')){const x=S.issues.find(i=>i.id===srcKey.slice(4));site0=x.site;asset0=x.asset;src=x.id;srcl='Issue '+x.id+': '+x.title}
+ if(srcKey?.startsWith('q:')){const i=curIns(),it=allItems(tpl(i.tpl)).find(q=>q.id===srcKey.slice(2));site0=i.ans.site?.v||site0;asset0=i.ans.asset?.v||'';src=i.id;srcl='Inspection, question: '+it.l;title='Defect: '+it.l.replace(/\?$/,'')}
  if(t?.v==='asset'){asset0=t.id;site0=asset(t.id).site}
- U.draft={id:'AC-'+S.n.AC,type:'Aktion',title,desc:'',prio:'Niedrig',due:toLocal(now()+7*DAY).slice(0,10),who:USER,site:site0,asset:asset0,st:'Offen',cf:{},src,srcl,_new:1};
+ U.draft={id:'AC-'+S.n.AC,type:'Action',title,desc:'',prio:'Low',due:toLocal(now()+7*DAY).slice(0,10),who:USER,site:site0,asset:asset0,st:'Open',cf:{},src,srcl,_new:1};
  U.sheet=null;push('act');
 }
-function newIss(){const t=top();const a=t?.v==='asset'?asset(t.id):null;U.idraft={step:1,text:'',media:[],cat:'',title:'',prio:'Mittel',site:a?a.site:(U.site||S.sites[0].id),asset:a?a.id:'',at:toLocal(now()),ai:0};U.sheet=null;push('issNew')}
+function newIss(){const t=top();const a=t?.v==='asset'?asset(t.id):null;U.idraft={step:1,text:'',media:[],cat:'',title:'',prio:'Medium',site:a?a.site:(U.site||S.sites[0].id),asset:a?a.id:'',at:toLocal(now()),ai:0};U.sheet=null;push('issNew')}
 function analyze(){
  const d=U.idraft,t=d.text.toLowerCase();d.step=2;render(true);
  setTimeout(()=>{
-  const R=[[/verletz|unfall|gestürzt|gerutscht|rutsch|gestolpert/,'Vorfall'],[/beinahe|fast |knapp/,'Beinaheunfall'],[/öl|leck|ausgelaufen|umwelt/,'Umwelt'],[/defekt|kaputt|bruch|gebrochen|riss|fehlermeldung|ausfall|lose/,'Technischer Mangel'],[/gefahr|ungesichert|offen|fehlt|blockiert/,'Gefährdung']];
+  const R=[[/injur|accident|slipped|fell|fall |tripped|hurt/,'Incident'],[/near miss|almost|nearly|close call/,'Near miss'],[/oil|leak|spill|environment/,'Environment'],[/defect|broken|broke|crack|error|fault|failure|loose|damaged/,'Technical defect'],[/hazard|danger|unsecured|open|missing|blocked/,'Hazard']];
   d.cat=(R.find(([r])=>r.test(t))||[0,'Feedback'])[1];
-  d.prio=/sofort|dringend|brand|feuer|strom|verletz|spannung/.test(t)?'Hoch':d.cat==='Feedback'?'Niedrig':'Mittel';
+  d.prio=/urgent|immediately|asap|fire|smoke|live|voltage|injur/.test(t)?'High':d.cat==='Feedback'?'Low':'Medium';
   const hit=S.assets.find(a=>t.includes(a.name.toLowerCase())||t.includes(a.name.toLowerCase().replace(/^pv array /,'array ')));
   if(hit){d.asset=hit.id;d.site=hit.site}
   const s=d.text.trim().split(/[.!?](?:\s|$)|\n/)[0];d.title=s.length>70?s.slice(0,67)+'…':s;
@@ -513,11 +513,11 @@ fileIn.addEventListener('change',async()=>{
  const fs=[...fileIn.files].slice(0,10);fileIn.value='';const imgs=(await Promise.all(fs.map(shrink))).filter(Boolean);if(!imgs.length)return;
  if(mTarget.startsWith('ans:')){const i=curIns(),id=mTarget.slice(4);i.ans[id]={...(i.ans[id]||{})};i.ans[id].media=[...(i.ans[id].media||[]),...imgs];if(tpl(i.tpl).pages.flatMap(p=>p.items).find(q=>q.id===id).t==='photo')i.ans[id].v='foto';i.upd=now()}
  if(mTarget==='idraft')U.idraft.media.push(...imgs.slice(0,10-U.idraft.media.length));
- if(mTarget.startsWith('iss:')){const x=S.issues.find(i=>i.id===mTarget.slice(4));x.media.push(...imgs);x.log.push({t:now(),w:USER,x:imgs.length+' Foto(s) hinzugefügt'})}
- save();render();toast(imgs.length+' Foto(s) hinzugefügt');
+ if(mTarget.startsWith('iss:')){const x=S.issues.find(i=>i.id===mTarget.slice(4));x.media.push(...imgs);x.log.push({t:now(),w:USER,x:imgs.length+' photo(s) added'})}
+ save();render();toast(imgs.length+' photo(s) added');
 });
-function reportText(i){const t=tpl(i.tpl),sc=score(i);let s=`${t.name}\n${sname(i.ans.site?.v)} · ${fdt(i.ans.date?.v)} · ${i.ans.prep?.v}\nBewertung ${sc.y}/${sc.tot} (${sc.pct} %), ${sc.fl} markiert\n`;for(const p of t.pages){s+=`\n== ${p.title} ==\n`;for(const it of p.items){const a=i.ans[it.id]||{};let v=a.v||'–';if(it.t==='yn')v={y:'Ja',n:'NEIN',na:'N.A.'}[a.v]||'–';if(it.t==='site')v=sname(a.v);if(it.t==='asset')v=aname(a.v)||'–';if(it.t==='sig'||it.t==='photo')v=a.v?'✓':'–';s+=`${it.l}: ${v}${a.note?' ('+a.note+')':''}\n`}}return s}
-async function copy(txt,msg){try{await navigator.clipboard.writeText(txt);toast(msg)}catch(e){toast('Kopieren nicht erlaubt')}}
+function reportText(i){const t=tpl(i.tpl),sc=score(i);let s=`${t.name}\n${sname(i.ans.site?.v)} · ${fdt(i.ans.date?.v)} · ${i.ans.prep?.v}\nScore ${sc.y}/${sc.tot} (${sc.pct}%), ${sc.fl} flagged\n`;for(const p of t.pages){s+=`\n== ${p.title} ==\n`;for(const it of p.items){const a=i.ans[it.id]||{};let v=a.v||'–';if(it.t==='yn')v={y:'Yes',n:'NO',na:'N/A'}[a.v]||'–';if(it.t==='site')v=sname(a.v);if(it.t==='asset')v=aname(a.v)||'–';if(it.t==='sig'||it.t==='photo')v=a.v?'✓':'–';s+=`${it.l}: ${v}${a.note?' ('+a.note+')':''}\n`}}return s}
+async function copy(txt,msg){try{await navigator.clipboard.writeText(txt);toast(msg)}catch(e){toast('Copy not allowed')}}
 
 const H={
  tab:x=>{U.tab=x;U.stack=[];render(true)},back:()=>{const t=top();if(t?.v==='act'&&U.draft?._dirty){U.dlg='discard';render();return}if(t?.v==='issNew'&&U.idraft.text&&U.idraft.step!==3){U.dlg='discard';render();return}pop()},
@@ -539,24 +539,24 @@ const H={
  sigClr:()=>{const c=document.getElementById('sig'),i=curIns();i.ans[c.dataset.id]={v:''};save();render()},
  finish:()=>{const i=curIns();U.miss=missing(i).map(m=>m.id);if(U.miss.length){U.dlg='miss';render();return}i.st='done';i.done=now();i.upd=now();save();U.stack.pop();U.stack.push({v:'done',id:i.id});render(true)},
  review:()=>{const i=curIns(),t=tpl(i.tpl);U.page=t.pages.findIndex(p=>p.items.some(it=>U.miss.includes(it.id)));U.dlg=null;render(true);setTimeout(()=>document.getElementById('q-'+U.miss[0])?.scrollIntoView({block:'center'}),30)},
- saveProg:()=>{U.dlg=null;U.miss=[];U.stack.pop();render(true);toast('Als „Im Gange“ gespeichert')},
+ saveProg:()=>{U.dlg=null;U.miss=[];U.stack.pop();render(true);toast('Saved as in progress')},
  doneRep:()=>{const id=top().id;U.stack.pop();U.stack.push({v:'report',id});render(true)},
- copyRep:()=>copy(reportText(curIns()),'Bericht als Text kopiert'),
+ copyRep:()=>copy(reportText(curIns()),'Report copied as text'),
  doDelIns:()=>{S.ins=S.ins.filter(i=>i.id!==top().id);U.dlg=null;save();pop()},
  openIss:x=>{U.itab='ov';push('iss',x)},itab:x=>{U.itab=x;render(true)},
- cmt:()=>{const v=document.getElementById('cmt').value.trim();if(!v)return;const x=S.issues.find(i=>i.id===top().id);x.log.push({t:now(),w:USER,x:'Kommentar: '+v});save();render()},
- manual:()=>{U.idraft.step=3;U.idraft.ai=0;render(true)},analyze:()=>{if(!U.idraft.text.trim()&&!U.idraft.media.length){toast('Bitte kurz beschreiben');return}analyze()},
- aiFb:x=>{U.idraft.ai=0;toast(x==='1'?'Danke für das Feedback':'Feedback gespeichert');render()},
- sendIss:()=>{const d=U.idraft;if(!d.cat||!d.title.trim()){toast('Kategorie und Titel fehlen');return}const id='IS-'+(S.n.IS++);S.issues.push({id,cat:d.cat,title:d.title.trim(),desc:d.text,st:'Offen',prio:d.prio,site:d.site,asset:d.asset,at:new Date(d.at).getTime()||now(),media:d.media,by:USER,log:[{t:now(),w:USER,x:'Problem erstellt'}]});save();U.stack.pop();U.itab='ov';U.stack.push({v:'iss',id});render(true);toast('Problem '+id+' gemeldet')},
+ cmt:()=>{const v=document.getElementById('cmt').value.trim();if(!v)return;const x=S.issues.find(i=>i.id===top().id);x.log.push({t:now(),w:USER,x:'Comment: '+v});save();render()},
+ manual:()=>{U.idraft.step=3;U.idraft.ai=0;render(true)},analyze:()=>{if(!U.idraft.text.trim()&&!U.idraft.media.length){toast('Please add a short description');return}analyze()},
+ aiFb:x=>{U.idraft.ai=0;toast(x==='1'?'Thanks for the feedback':'Feedback saved');render()},
+ sendIss:()=>{const d=U.idraft;if(!d.cat||!d.title.trim()){toast('Category and title are required');return}const id='IS-'+(S.n.IS++);S.issues.push({id,cat:d.cat,title:d.title.trim(),desc:d.text,st:'Open',prio:d.prio,site:d.site,asset:d.asset,at:new Date(d.at).getTime()||now(),media:d.media,by:USER,log:[{t:now(),w:USER,x:'Issue created'}]});save();U.stack.pop();U.itab='ov';U.stack.push({v:'iss',id});render(true);toast('Issue '+id+' reported')},
  newAct:x=>newAct(x),
- editAct:x=>{const a=S.actions.find(y=>y.id===x);U.draft=JSON.parse(JSON.stringify(a));const src=a.src;U.draft.srcl=src?(src.startsWith('IS')?'Problem '+src:'Inspektion '+src):'';push('act')},
+ editAct:x=>{const a=S.actions.find(y=>y.id===x);U.draft=JSON.parse(JSON.stringify(a));const src=a.src;U.draft.srcl=src?(src.startsWith('IS')?'Issue '+src:'Inspection '+src):'';push('act')},
  ast:x=>{U.draft.st=x;U.draft._dirty=1;render()},
- saveAct:()=>{const d=U.draft;if(!d.title.trim()){toast('Titel fehlt');return}const {_new,_dirty,srcl,...a}=d;const k=S.actions.findIndex(y=>y.id===a.id);if(k<0){S.actions.push(a);S.n.AC++}else S.actions[k]=a;const src=S.issues.find(i=>i.id===a.src);if(src&&k<0)src.log.push({t:now(),w:USER,x:'Aktion '+a.id+' erstellt'});save();pop();toast('Aktion '+a.id+' gespeichert')},
+ saveAct:()=>{const d=U.draft;if(!d.title.trim()){toast('Title is required');return}const {_new,_dirty,srcl,...a}=d;const k=S.actions.findIndex(y=>y.id===a.id);if(k<0){S.actions.push(a);S.n.AC++}else S.actions[k]=a;const src=S.issues.find(i=>i.id===a.src);if(src&&k<0)src.log.push({t:now(),w:USER,x:'Action '+a.id+' created'});save();pop();toast('Action '+a.id+' saved')},
  doDelAct:()=>{S.actions=S.actions.filter(a=>a.id!==U.draft.id);U.dlg=null;save();pop()},
  doDiscard:()=>{U.dlg=null;pop()},
  push:x=>{U.q='';push(x)},openAsset:x=>{U.atab='open';push('asset',x)},atab:x=>{U.atab=x;render(true)},
- export:()=>copy(JSON.stringify(S,null,1),'JSON kopiert'),
- doReset:()=>{S=seed();U.dlg=null;U.stack=[];U.site='';save();render(true);toast('Neue Zufallsdaten erzeugt')}
+ export:()=>copy(JSON.stringify(S,null,1),'JSON copied'),
+ doReset:()=>{S=seed();U.dlg=null;U.stack=[];U.site='';save();render(true);toast('New random data generated')}
 };
 app.addEventListener('click',e=>{
  const b=e.target.closest('[data-a]');
@@ -578,7 +578,7 @@ let installEvt=null;
 const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(U.tab==='more'&&!top())render()});
-window.addEventListener('appinstalled',()=>{installEvt=null;toast('Feldcheck installiert');render()});
+window.addEventListener('appinstalled',()=>{installEvt=null;toast('Feldcheck installed');render()});
 H.install=async()=>{if(installEvt){installEvt.prompt();await installEvt.userChoice;installEvt=null;render()}else{U.dlg='ios';render()}};
 H.update=()=>{waitingSW?.postMessage('SKIP_WAITING')};
 let waitingSW=null;
@@ -591,7 +591,7 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
  let reloaded=false;
  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloaded)return;reloaded=true;location.reload()});
 }
-function showUpdate(){const d=document.createElement('button');d.className='toast';d.style.cursor='pointer';d.textContent='Neue Version verfügbar · Tippen zum Laden';d.onclick=H.update;app.appendChild(d)}
+function showUpdate(){const d=document.createElement('button');d.className='toast';d.style.cursor='pointer';d.textContent='New version available · tap to reload';d.onclick=H.update;app.appendChild(d)}
 const start=()=>render(true);
 start();
 }
