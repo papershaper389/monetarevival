@@ -185,7 +185,7 @@ const fd=t=>t?new Date(t).toLocaleDateString('en-GB',{day:'2-digit',month:'2-dig
 const fdt=t=>t?new Date(t).toLocaleString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'–';
 const toLocal=t=>{const d=new Date(t);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
 const ago=t=>{const d=Math.round((now()-t)/DAY);return d<=0?'today':d===1?'yesterday':`${d} days ago`};
-const USER='Gregor Biering';
+const USER='Alex Demo';
 
 const titlePage=()=>({title:'Title page',items:[{id:'site',t:'site',l:'Site conducted',req:1},{id:'asset',t:'asset',l:'Asset'},{id:'date',t:'datetime',l:'Conducted on',req:1},{id:'prep',t:'text',l:'Prepared by',req:1},{id:'loc',t:'text',l:'Location / address'}]});
 const closePage=()=>({title:'Sign-off',items:[{id:'rem',t:'textarea',l:'Remarks'},{id:'sig',t:'sig',l:'Inspector signature',req:1}]});
@@ -200,12 +200,12 @@ const allItems=t=>t.pages.flatMap(p=>p.items);
 function seed(){
  const t=now(),R=Math.random,ri=(a,b)=>a+Math.floor(R()*(b-a+1)),pick=a=>a[Math.floor(R()*a.length)],ch=p=>R()<p;
  const wpick=o=>{let r=R()*Object.values(o).reduce((a,b)=>a+b,0);for(const k in o){r-=o[k];if(r<=0)return k}return Object.keys(o)[0]};
- const PEOPLE=[USER,USER,'Lennart Peters','Priyanka Joshi','Farouk Elguefrei','Lucia Perez','Thibault Cazaurang','Birte Schulz','Emmanuel Mompremier','Jana Wolters','Mehmet Aydın'];
+ const PEOPLE=['Alex Demo','Alex Demo','Sam Example','Jordan Sample','Taylor Test','Robin Muster','Kim Placeholder','Chris Fictive','Max Mustermann','Erika Musterfrau','Jamie Doe'];
  const SITES=[['Schönau A Solar Park','Feldweg 4, 79677 Schönau, Germany','PV','SCH01PV'],['Heidesee Solar Park','Am Heidesee 2, 15754 Heidesee, Germany','PV','HDS02PV'],['Nordfeld Wind Farm','Am Deich 12, 25899 Niebüll, Germany','WP','NF01WP'],['Hohe Geest Wind Farm','Geestweg 7, 27412 Tarmstedt, Germany','WP','HG03WP'],['East Substation','Industriestraße 30, 45478 Mülheim, Germany','UW','OST01UW'],['Lippetal Battery Storage','Hellweg 88, 59510 Lippetal, Germany','BESS','LIP01BS']];
  const sites=[],assets=[];let an=1;
  const add=(s,type,name,tid)=>assets.push({id:'A'+(an++),type,name,tid,site:s,st:wpick({'In operation':80,'Maintenance':10,'Fault':7,'Out of service':3})});
  SITES.slice().sort(()=>R()-.5).slice(0,ri(4,6)).forEach(([name,addr,k,code],n)=>{
-  const id='S'+(n+1);sites.push({id,name,addr});const pre='DE_'+code.slice(0,3)+'.'+code;
+  const id='S'+(n+1);sites.push({id,name,addr});const pre='DEMO.'+code;
   if(k==='PV'){add(id,'Transformer station','Transformer Station 01',pre+'.G01');for(let g=1;g<=ri(1,2);g++)add(id,'Inverter','Inverter station '+g,pre+'.G0'+g+'.WR');for(let i=1,m=ri(4,9);i<=m;i++)add(id,'PV array','PV Array 1.'+i,pre+'.G01.MQA'+String(i).padStart(2,'0'))}
   if(k==='WP'){for(let i=1,m=ri(3,8);i<=m;i++)add(id,'Wind turbine','WTG '+String(i).padStart(2,'0'),pre+'.WEA'+String(i).padStart(2,'0'));add(id,'Transformer station','Grid connection station',pre+'.UEB')}
   if(k==='UW'){for(let i=1,m=ri(2,4);i<=m;i++)add(id,'Transformer station','Transformer T'+i,pre+'.T0'+i);add(id,'Switchgear','110 kV switchgear bay',pre+'.SF110')}
@@ -240,11 +240,11 @@ function seed(){
  const asset=id=>assets.find(x=>x.id===id);
  for(const x of issues)if(x.cat!=='Feedback'&&ch(.6))mkAct(ch(.5)?'SAP notification':'Action',(x.asset?'Fix defect: ':'Clarify: ')+x.title,x.asset?{art:()=>'M2 Malfunction report'}:{},x.site,x.asset,x.id);
  for(let k=0,m=ri(10,18);k<m;k++){const [ty,ti,cfg]=pick(ACT),s=pick(sites).id,a=ch(.5)?(pick(assets.filter(x=>x.site===s))?.id||''):'';mkAct(ty,ti+(a?' ('+asset(a).name+')':''),cfg,s,a,'')}
- return {v:3,sites,assets,ins,issues,actions,n:{I:iN,IS:isN,AC:aN}};
+ return {v:4,sites,assets,ins,issues,actions,n:{I:iN,IS:isN,AC:aN}};
 }
 let S;
 try{S=JSON.parse(localStorage.getItem('feldcheck.v1'))}catch(e){}
-if(!S||S.v!==3)S=seed();
+if(!S||S.v!==4)S=seed();
 let warned=false;
 const save=()=>{try{localStorage.setItem('feldcheck.v1',JSON.stringify(S))}catch(e){if(!warned){warned=true;toast('Storage full: photos kept until reload only')}}};
 
@@ -405,7 +405,7 @@ function sAct(){
  <div class="kick" style="margin-top:0">Status</div><div class="seg">${['Open','In progress','Done'].map(s=>`<button class="${d.st===s?'on':''}" data-a="ast" data-x="${s}">${s}</button>`).join('')}</div>
  <label class="f"><span>Priority</span><select class="in" id="ap" data-d="prio">${['Low','Medium','High'].map(c=>`<option ${d.prio===c?'selected':''}>${c}</option>`).join('')}</select></label>
  <label class="f"><span>Due date</span><input class="in" type="date" id="adue" data-d="due" value="${esc(d.due)}"></label>
- <label class="f"><span>Assignee</span><select class="in" id="aw" data-d="who">${[USER,'Lennart Peters','Priyanka Joshi','Farouk Elguefrei'].map(c=>`<option ${d.who===c?'selected':''}>${c}</option>`).join('')}</select></label>
+ <label class="f"><span>Assignee</span><select class="in" id="aw" data-d="who">${[USER,'Sam Example','Jordan Sample','Taylor Test','Robin Muster'].map(c=>`<option ${d.who===c?'selected':''}>${c}</option>`).join('')}</select></label>
  <label class="f"><span>Site</span><select class="in" id="as" data-d="site" data-re="1">${S.sites.map(s=>`<option value="${s.id}" ${d.site===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select></label>
  <label class="f"><span>Asset</span><select class="in" id="aa" data-d="asset"><option value="">No asset</option>${S.assets.filter(a=>a.site===d.site).map(a=>`<option value="${a.id}" ${d.asset===a.id?'selected':''}>${esc(a.name)}</option>`).join('')}</select></label>
  ${TYPES[d.type].length?`<div class="kick">Custom fields · ${esc(d.type)}</div>`+TYPES[d.type].map(([k,l])=>`<label class="f"><span>${l}</span><input class="in" id="cf-${k}" data-cf="${k}" value="${esc(d.cf[k]||'')}"></label>`).join(''):''}

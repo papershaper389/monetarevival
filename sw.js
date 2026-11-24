@@ -1,6 +1,6 @@
 // Feldcheck Service Worker
 // Bei jeder Änderung an App-Dateien VERSION hochzählen, damit Geräte die neue Version laden.
-const VERSION = 'v1.1.0';
+const VERSION = 'v1.2.0';
 const APP_CACHE = `feldcheck-app-${VERSION}`;
 const RUNTIME_CACHE = 'feldcheck-runtime';
 
