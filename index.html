@@ -201,15 +201,16 @@ function seed(){
  const t=now(),R=Math.random,ri=(a,b)=>a+Math.floor(R()*(b-a+1)),pick=a=>a[Math.floor(R()*a.length)],ch=p=>R()<p;
  const wpick=o=>{let r=R()*Object.values(o).reduce((a,b)=>a+b,0);for(const k in o){r-=o[k];if(r<=0)return k}return Object.keys(o)[0]};
  const PEOPLE=['Alex Demo','Alex Demo','Sam Example','Jordan Sample','Taylor Test','Robin Muster','Kim Placeholder','Chris Fictive','Max Mustermann','Erika Musterfrau','Jamie Doe'];
- const SITES=[['Schönau A Solar Park','Feldweg 4, 79677 Schönau, Germany','PV','SCH01PV'],['Heidesee Solar Park','Am Heidesee 2, 15754 Heidesee, Germany','PV','HDS02PV'],['Nordfeld Wind Farm','Am Deich 12, 25899 Niebüll, Germany','WP','NF01WP'],['Hohe Geest Wind Farm','Geestweg 7, 27412 Tarmstedt, Germany','WP','HG03WP'],['East Substation','Industriestraße 30, 45478 Mülheim, Germany','UW','OST01UW'],['Lippetal Battery Storage','Hellweg 88, 59510 Lippetal, Germany','BESS','LIP01BS']];
+ const SITES=[['Sunfield North','1 Sample Road, Demotown','PV','SFN'],['Sunfield South','12 Example Lane, Demotown','PV','SFS'],['Windridge','3 Hilltop Way, Testford','WP','WRG'],['Coastline Wind','8 Harbour Street, Testford','WP','CLW'],['Grid Hub East','20 Placeholder Avenue, Mockham','UW','GHE'],['Battery Yard West','5 Fiction Park, Mockham','BESS','BYW']];
  const sites=[],assets=[];let an=1;
  const add=(s,type,name,tid)=>assets.push({id:'A'+(an++),type,name,tid,site:s,st:wpick({'In operation':80,'Maintenance':10,'Fault':7,'Out of service':3})});
+ const two=i=>String(i).padStart(2,'0'),LET='ABCDEFGHIJ';
  SITES.slice().sort(()=>R()-.5).slice(0,ri(4,6)).forEach(([name,addr,k,code],n)=>{
-  const id='S'+(n+1);sites.push({id,name,addr});const pre='DEMO.'+code;
-  if(k==='PV'){add(id,'Transformer station','Transformer Station 01',pre+'.G01');for(let g=1;g<=ri(1,2);g++)add(id,'Inverter','Inverter station '+g,pre+'.G0'+g+'.WR');for(let i=1,m=ri(4,9);i<=m;i++)add(id,'PV array','PV Array 1.'+i,pre+'.G01.MQA'+String(i).padStart(2,'0'))}
-  if(k==='WP'){for(let i=1,m=ri(3,8);i<=m;i++)add(id,'Wind turbine','WTG '+String(i).padStart(2,'0'),pre+'.WEA'+String(i).padStart(2,'0'));add(id,'Transformer station','Grid connection station',pre+'.UEB')}
-  if(k==='UW'){for(let i=1,m=ri(2,4);i<=m;i++)add(id,'Transformer station','Transformer T'+i,pre+'.T0'+i);add(id,'Switchgear','110 kV switchgear bay',pre+'.SF110')}
-  if(k==='BESS'){for(let i=1,m=ri(4,8);i<=m;i++)add(id,'Battery container','Container '+String(i).padStart(2,'0'),pre+'.BC'+String(i).padStart(2,'0'));add(id,'Transformer station','MV transformer',pre+'.T01')}
+  const id='S'+(n+1);sites.push({id,name,addr});const pre='DEMO-'+code;
+  if(k==='PV'){add(id,'Transformer station','Main transformer',pre+'-TX1');for(let g=1;g<=ri(1,2);g++)add(id,'Inverter','Inverter hub '+g,pre+'-INV'+g);for(let i=0,m=ri(4,9);i<m;i++)add(id,'PV array','Field '+LET[i],pre+'-F'+LET[i])}
+  if(k==='WP'){for(let i=1,m=ri(3,8);i<=m;i++)add(id,'Wind turbine','Turbine '+two(i),pre+'-T'+two(i));add(id,'Transformer station','Export kiosk',pre+'-KSK')}
+  if(k==='UW'){for(let i=1,m=ri(2,4);i<=m;i++)add(id,'Transformer station','Transformer '+LET[i-1],pre+'-TX'+LET[i-1]);add(id,'Switchgear','HV bay 1',pre+'-HV1')}
+  if(k==='BESS'){for(let i=1,m=ri(4,8);i<=m;i++)add(id,'Battery container','Battery unit '+two(i),pre+'-BU'+two(i));add(id,'Transformer station','Step-up transformer',pre+'-TX1')}
  });
  const NOTES={m1:['Broken glass on module {n}, row {r}.','Discolouration (snail trails) on {n} modules.','Module frame bent after storm.'],m2:['Corrosion on ram post, row {r}.','Loose clamp on table {n}.'],m3:['Vegetation shading bottom module row.','Grass taller than 40 cm.'],e1:['String cable chafing on edge, table {n}.','Cable tie broken, cable sagging.'],e2:['Inverter reports insulation fault.','Display shows error {n}.'],e3:['Warning sticker missing on combiner box.','Label for string {n} illegible.'],z1:['Lock stiff.','Door found unlocked.'],z2:['Sign on north door faded.','High-voltage sign missing.'],z3:['Extinguisher inspection tag expired.','Fire extinguisher missing.'],k1:['Oil level below minimum.','Oil traces in bund.'],k2:['Hum louder than usual.','Slight burning smell.'],s1:['{n} people without hard hat.','Contractor missing hi-vis vest.'],s2:['Escape route blocked by material.','Walkway not marked.'],s3:['First-aid kit expired.','Eyewash bottle missing.'],s4:['No edge fall protection.']};
  const fill=s=>s.replace('{n}',ri(2,24)).replace('{r}',pick('ABCDEF'));
@@ -228,7 +229,7 @@ function seed(){
   ins.push({id:'I'+(iN++),tpl:tid,st:done?'done':'prog',by,start:st0,upd:st0+d,done:done?st0+d:undefined,ans});
  }
  ins.sort((a,b)=>a.start-b.start);
- const ISS=[['Incident','Vehicle slipped on snow into ditch','High'],['Incident','Technician slipped on wet ladder','High'],['Near miss','Tool dropped from nacelle, nobody hit','High'],['Near miss','Contractor vehicle entered site without induction','Medium'],['Hazard','Fence damaged on south side, site open','Medium'],['Hazard','Cable trench not secured','High'],['Hazard','Ice build-up on rotor blades','High'],['Environment','Oil traces under transformer bund','Medium'],['Environment','Hydraulic leak on crane','Medium'],['Technical defect','SCADA router communication loss','Medium'],['Technical defect','Battery container fan faulty','High'],['Technical defect','Gate camera shows no image','Low'],['Feedback','Car park hard to access in rain','Low'],['Feedback','Key safe hard to reach','Low']];
+ const ISS=[['Incident','Van stuck on muddy access road','Medium'],['Incident','Technician slipped on wet ladder','High'],['Near miss','Tool dropped from nacelle, nobody hit','High'],['Near miss','Contractor vehicle entered site without induction','Medium'],['Hazard','Fence damaged on south side, site open','Medium'],['Hazard','Cable trench not secured','High'],['Hazard','Ice build-up on rotor blades','High'],['Environment','Oil traces under transformer bund','Medium'],['Environment','Hydraulic leak on crane','Medium'],['Technical defect','SCADA router communication loss','Medium'],['Technical defect','Battery container fan faulty','High'],['Technical defect','Gate camera shows no image','Low'],['Feedback','Car park hard to access in rain','Low'],['Feedback','Key safe hard to reach','Low']];
  const issues=[];let isN=1;
  const mkIss=(cat,title,prio,s,a,at,insId,desc)=>{const st=wpick({'Open':40,'In progress':25,'Resolved':35}),by=pick(PEOPLE),log=[{t:at,w:by,x:'Issue created'}];if(st!=='Open')log.push({t:at+ri(1,10)*DAY,w:pick(PEOPLE),x:'Status: '+st});if(ch(.4))log.push({t:at+ri(1,5)*DAY,w:pick(PEOPLE),x:'Comment: '+pick(['Spare part ordered.','Contractor informed.','Checked on site, photo to follow.','Please resolve by Friday.'])});const id='IS-'+(isN++);issues.push({id,cat,title,desc:desc||'',st,prio,site:s,asset:a,at,media:[],by,ins:insId,log});return id};
  for(const i of ins)for(const it of allItems(tpl(i.tpl)))if(i.ans[it.id]?.v==='n'&&ch(.3))mkIss(i.tpl==='T3'?'Hazard':'Technical defect',(i.ans[it.id].note||it.l).replace(/\.$/,''),pick(['Medium','High']),i.ans.site.v,i.ans.asset.v,i.start+6e5,i.id,'From inspection '+i.id+'.');
@@ -240,11 +241,11 @@ function seed(){
  const asset=id=>assets.find(x=>x.id===id);
  for(const x of issues)if(x.cat!=='Feedback'&&ch(.6))mkAct(ch(.5)?'SAP notification':'Action',(x.asset?'Fix defect: ':'Clarify: ')+x.title,x.asset?{art:()=>'M2 Malfunction report'}:{},x.site,x.asset,x.id);
  for(let k=0,m=ri(10,18);k<m;k++){const [ty,ti,cfg]=pick(ACT),s=pick(sites).id,a=ch(.5)?(pick(assets.filter(x=>x.site===s))?.id||''):'';mkAct(ty,ti+(a?' ('+asset(a).name+')':''),cfg,s,a,'')}
- return {v:4,sites,assets,ins,issues,actions,n:{I:iN,IS:isN,AC:aN}};
+ return {v:5,sites,assets,ins,issues,actions,n:{I:iN,IS:isN,AC:aN}};
 }
 let S;
 try{S=JSON.parse(localStorage.getItem('feldcheck.v1'))}catch(e){}
-if(!S||S.v!==4)S=seed();
+if(!S||S.v!==5)S=seed();
 let warned=false;
 const save=()=>{try{localStorage.setItem('feldcheck.v1',JSON.stringify(S))}catch(e){if(!warned){warned=true;toast('Storage full: photos kept until reload only')}}};
 
@@ -366,7 +367,7 @@ function sReport(id){
 function sIssNew(){
  const d=U.idraft;
  if(d.step===1)return hdSub('Report issue')+`<div class="scr"><div class="ai">${ic('spark')}<span>Describe what happened. The assistant pre-fills category, title, priority and asset.</span></div>
- <label class="f"><span>What happened?</span><textarea class="in" id="idtext" data-id="text" style="min-height:150px" placeholder="e.g. A module on PV Array 1.3 is broken and a cable is hanging loose.">${esc(d.text)}</textarea></label>
+ <label class="f"><span>What happened?</span><textarea class="in" id="idtext" data-id="text" style="min-height:150px" placeholder="e.g. A module in Field C is broken and a cable is hanging loose.">${esc(d.text)}</textarea></label>
  <button class="btn sec" data-a="media" data-x="idraft">Add media</button>${d.media.length?`<div class="thumbs">${d.media.map(m=>`<img src="${m}" alt="">`).join('')}</div>`:''}
  <p class="sub" style="margin-top:10px">Up to 10 photos. Audio recording isn't available in the browser prototype.</p></div>
  <div class="bar"><button class="btn ghost" data-a="manual">Enter manually</button><button class="btn" data-a="analyze">Continue</button></div>`;
@@ -501,7 +502,7 @@ function analyze(){
   const R=[[/injur|accident|slipped|fell|fall |tripped|hurt/,'Incident'],[/near miss|almost|nearly|close call/,'Near miss'],[/oil|leak|spill|environment/,'Environment'],[/defect|broken|broke|crack|error|fault|failure|loose|damaged/,'Technical defect'],[/hazard|danger|unsecured|open|missing|blocked/,'Hazard']];
   d.cat=(R.find(([r])=>r.test(t))||[0,'Feedback'])[1];
   d.prio=/urgent|immediately|asap|fire|smoke|live|voltage|injur/.test(t)?'High':d.cat==='Feedback'?'Low':'Medium';
-  const hit=S.assets.find(a=>t.includes(a.name.toLowerCase())||t.includes(a.name.toLowerCase().replace(/^pv array /,'array ')));
+  const hit=S.assets.slice().sort((a,b)=>b.name.length-a.name.length).find(a=>t.includes(a.name.toLowerCase()));
   if(hit){d.asset=hit.id;d.site=hit.site}
   const s=d.text.trim().split(/[.!?](?:\s|$)|\n/)[0];d.title=s.length>70?s.slice(0,67)+'…':s;
   d.ai=1;d.step=3;if(top()?.v==='issNew')render(true);

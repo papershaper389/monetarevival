@@ -8,7 +8,7 @@ Prototyp einer Inspektions-App für Anlagen im Feld (PV, Wind, Umspannwerk, Batt
 - **Probleme** per Freitext und Foto, mit simulierter KI-Vorausfüllung (regelbasiert)
 - **Aktionen** mit Typen (Aktion, PSA-Bestellung, SAP-Meldung) und typabhängigen Zusatzfeldern
 - **Sites und Assets** mit offenen Punkten je Anlage
-- **Zufällige, anonyme Beispieldaten** (fiktive Personen wie „Alex Demo“, Asset-IDs mit Präfix `DEMO.`), unter *Mehr → Neue Zufallsdaten erzeugen* neu auswürfelbar
+- **Zufällige, anonyme Beispieldaten** (fiktive Personen wie „Alex Demo“, fiktive Standorte und Anlagen, Asset-IDs mit Präfix `DEMO-`), unter *Mehr → Neue Zufallsdaten erzeugen* neu auswürfelbar
 
 Die Oberfläche ist auf Englisch. Alle Daten liegen nur lokal im Browser des Geräts (`localStorage`). Es gibt noch kein Backend und keinen Abgleich zwischen Geräten.
 
